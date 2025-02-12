@@ -22,6 +22,12 @@ public class TurmaController {
         return ResponseEntity.ok(novaTurma);
     }
 
+    @PostMapping("/{turmaId}/matricular/{alunoId}")
+    public ResponseEntity<Turma> matricularAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        Turma turma = turmaService.matricularAluno(turmaId, alunoId);
+        return ResponseEntity.ok(turma);
+    }
+
     @GetMapping
     public ResponseEntity<List<Turma>> listarTodasTurmas() {
         return ResponseEntity.ok(turmaService.listarTodasTurmas());

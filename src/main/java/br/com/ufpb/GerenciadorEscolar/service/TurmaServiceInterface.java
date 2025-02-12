@@ -9,4 +9,5 @@ public interface TurmaServiceInterface {
     List<Turma> listarTodasTurmas();
     Optional<Turma> buscarTurmaPorId(Long id);
     void deletarTurma(Long id);
+    Turma matricularAluno(Long turmaId, Long alunoId);
 }

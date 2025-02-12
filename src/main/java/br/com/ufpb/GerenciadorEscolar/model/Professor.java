@@ -1,4 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -10,7 +12,8 @@ import java.util.List;
 public class Professor extends Usuario {
     private String departamento;
 
-    @OneToMany(mappedBy = "professor") // Professor ministra várias turmas
+    @JsonManagedReference
+    @OneToMany(mappedBy = "professor", cascade = CascadeType.ALL)
     private List<Turma> turmas;
 
     public String getDepartamento() {

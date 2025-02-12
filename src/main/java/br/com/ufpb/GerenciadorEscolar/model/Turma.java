@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -15,8 +16,9 @@ public class Turma {
     private String codigo;
     private String semestre;
 
+    @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "professor_id", nullable = false) // FK para Professor
+    @JoinColumn(name = "professor_id")
     private Professor professor;
 
     @ManyToMany
