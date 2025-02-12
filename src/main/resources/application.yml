@@ -1,0 +1,3 @@
+spring.application.name=GerenciadorEscolar
+spring.profiles.active=dev
+
