@@ -2,7 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.model.Material;
 import br.com.ufpb.GerenciadorEscolar.repository.MaterialRepository;
-import br.com.ufpb.GerenciadorEscolar.service.MaterialServiceInterface;
+import br.com.ufpb.GerenciadorEscolar.service.interfaces.MaterialServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,4 +28,10 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
     public void deletarMaterial(Long id) {
         materialRepository.deleteById(id);
     }
+
+    public Material buscarMaterialPorId(Long id) {
+        return materialRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Material não encontrado"));
+    }
+
 }

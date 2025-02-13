@@ -15,7 +15,6 @@ public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nomeArquivo;
     private String urlArquivo; // Caminho do arquivo no MinIO
 

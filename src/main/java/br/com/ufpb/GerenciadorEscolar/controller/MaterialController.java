@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
 import br.com.ufpb.GerenciadorEscolar.model.Material;
-import br.com.ufpb.GerenciadorEscolar.service.MaterialServiceInterface;
+import br.com.ufpb.GerenciadorEscolar.service.interfaces.MaterialServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

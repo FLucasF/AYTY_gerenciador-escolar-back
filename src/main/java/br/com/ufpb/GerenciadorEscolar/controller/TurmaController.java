@@ -2,7 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.controller;
 
 import br.com.ufpb.GerenciadorEscolar.dto.TurmaDTO;
 import br.com.ufpb.GerenciadorEscolar.model.Turma;
-import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
+import br.com.ufpb.GerenciadorEscolar.service.interfaces.TurmaServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

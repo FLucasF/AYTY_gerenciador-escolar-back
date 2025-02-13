@@ -22,7 +22,7 @@ public class Mural {
     private String titulo;
 
     @Column(columnDefinition = "TEXT")
-    private String mensagem;
+    private String conteudo;
 
     private LocalDateTime dataCriacao;
 
@@ -50,12 +50,12 @@ public class Mural {
         this.titulo = titulo;
     }
 
-    public String getMensagem() {
-        return mensagem;
+    public String getConteudo() {
+        return conteudo;
     }
 
-    public void setMensagem(String mensagem) {
-        this.mensagem = mensagem;
+    public void setConteudo(String conteudo) {
+        this.conteudo = conteudo;
     }
 
     public LocalDateTime getDataCriacao() {
@@ -81,4 +81,6 @@ public class Mural {
     public void setProfessor(Professor professor) {
         this.professor = professor;
     }
+
+
 }

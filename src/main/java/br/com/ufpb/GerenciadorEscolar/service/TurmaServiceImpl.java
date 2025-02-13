@@ -4,7 +4,7 @@ import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.Turma;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
-import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
+import br.com.ufpb.GerenciadorEscolar.service.interfaces.TurmaServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -73,4 +73,40 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     public void deletarTurma(Long id) {
         turmaRepository.deleteById(id);
     }
+
+    public Turma atualizarTurma(Long id, Turma novaTurma) {
+        Turma turma = turmaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
+
+        turma.setNome(novaTurma.getNome());
+        turma.setCodigo(novaTurma.getCodigo());
+        turma.setSemestre(novaTurma.getSemestre());
+
+        return turmaRepository.save(turma);
+    }
+
+    public Turma removerAlunoDaTurma(Long turmaId, Long alunoId) {
+        Turma turma = turmaRepository.findById(turmaId)
+                .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
+        Aluno aluno = alunoRepository.findById(alunoId)
+                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+
+        turma.getAlunos().remove(aluno);
+        aluno.getTurmas().remove(turma);
+
+        alunoRepository.save(aluno);
+        return turmaRepository.save(turma);
+    }
+
+    public List<Turma> listarTurmasPorProfessor(Long professorId) {
+        return turmaRepository.findByProfessorId(professorId);
+    }
+
+    public List<Aluno> listarAlunosPorTurma(Long turmaId) {
+        Turma turma = turmaRepository.findById(turmaId)
+                .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
+        return turma.getAlunos();
+    }
+
+
 }

@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
 import br.com.ufpb.GerenciadorEscolar.model.Mural;
-import br.com.ufpb.GerenciadorEscolar.service.MuralServiceInterface;
+import br.com.ufpb.GerenciadorEscolar.service.interfaces.MuralServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
