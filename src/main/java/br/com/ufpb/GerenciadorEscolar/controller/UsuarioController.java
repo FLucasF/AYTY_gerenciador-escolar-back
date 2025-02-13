@@ -1,8 +1,11 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
+import br.com.ufpb.GerenciadorEscolar.dto.AlunoDTO;
+import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.service.UsuarioService;
 import br.com.ufpb.GerenciadorEscolar.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -36,6 +39,12 @@ public class UsuarioController {
     @GetMapping("/email/{email}")
     public Object buscarPorEmail(@PathVariable String email) {
         return usuarioService.buscarPorEmail(email).orElse(null);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AlunoDTO> buscarAlunoPorId(@PathVariable Long id) {
+        AlunoDTO alunoDTO = usuarioService.buscarAlunoPorId(id);
+        return ResponseEntity.ok(alunoDTO);
     }
 
 }

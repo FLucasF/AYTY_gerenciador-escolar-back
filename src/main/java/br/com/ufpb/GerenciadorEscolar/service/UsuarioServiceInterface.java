@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
+import br.com.ufpb.GerenciadorEscolar.dto.AlunoDTO;
 import br.com.ufpb.GerenciadorEscolar.model.Usuario;
 import java.util.Optional;
 
@@ -9,4 +10,5 @@ public interface UsuarioServiceInterface {
     Optional<Usuario> buscarPorEmail(String email);
     Usuario atualizarUsuario(Long id, Usuario novosDados);
     void deletarUsuario(Long id);
+    AlunoDTO buscarAlunoPorId(Long id);
 }

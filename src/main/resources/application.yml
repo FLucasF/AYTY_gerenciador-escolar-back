@@ -1,3 +1,6 @@
-spring.application.name=GerenciadorEscolar
-spring.profiles.active=dev
+spring:
+  application:
+    name: GerenciadorEscolar
+  profiles:
+    active: dev
 

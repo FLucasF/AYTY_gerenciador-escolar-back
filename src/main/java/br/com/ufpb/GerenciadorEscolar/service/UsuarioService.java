@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
+import br.com.ufpb.GerenciadorEscolar.dto.AlunoDTO;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
@@ -52,5 +53,11 @@ public class UsuarioService {
 
         Optional<Administrador> admin = administradorRepository.findByEmail(email);
         return admin;
+    }
+
+    public AlunoDTO buscarAlunoPorId(Long id) {
+        Aluno aluno = alunoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        return new AlunoDTO(aluno);
     }
 }

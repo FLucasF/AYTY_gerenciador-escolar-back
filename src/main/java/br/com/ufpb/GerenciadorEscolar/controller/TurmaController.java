@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
+import br.com.ufpb.GerenciadorEscolar.dto.TurmaDTO;
 import br.com.ufpb.GerenciadorEscolar.model.Turma;
 import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/turmas")
@@ -17,31 +19,29 @@ public class TurmaController {
     private TurmaServiceInterface turmaService;
 
     @PostMapping
-    public ResponseEntity<Turma> criarTurma(@RequestBody Turma turma) {
+    public ResponseEntity<TurmaDTO> criarTurma(@RequestBody Turma turma) {
         Turma novaTurma = turmaService.criarTurma(turma);
-        return ResponseEntity.ok(novaTurma);
+        return ResponseEntity.ok(new TurmaDTO(novaTurma));
     }
 
     @PostMapping("/{turmaId}/matricular/{alunoId}")
-    public ResponseEntity<Turma> matricularAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+    public ResponseEntity<TurmaDTO> matricularAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
         Turma turma = turmaService.matricularAluno(turmaId, alunoId);
-        return ResponseEntity.ok(turma);
+        return ResponseEntity.ok(new TurmaDTO(turma));
     }
 
     @GetMapping
-    public ResponseEntity<List<Turma>> listarTodasTurmas() {
-        return ResponseEntity.ok(turmaService.listarTodasTurmas());
+    public ResponseEntity<List<TurmaDTO>> listarTodasTurmas() {
+        List<TurmaDTO> turmasDTO = turmaService.listarTodasTurmas().stream()
+                .map(TurmaDTO::new) // Convertendo cada `Turma` para `TurmaDTO`
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(turmasDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Turma> buscarTurmaPorId(@PathVariable Long id) {
+    public ResponseEntity<TurmaDTO> buscarTurmaPorId(@PathVariable Long id) {
         Optional<Turma> turma = turmaService.buscarTurmaPorId(id);
-        return turma.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarTurma(@PathVariable Long id) {
-        turmaService.deletarTurma(id);
-        return ResponseEntity.noContent().build();
+        return turma.map(value -> ResponseEntity.ok(new TurmaDTO(value)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
