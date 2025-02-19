@@ -10,4 +10,6 @@ public interface ProfessorServiceInterface {
     Professor cadastrarProfessor(Professor professor);
     Professor atualizarProfessor(Long id, Professor professor);
     void desativarProfessor(Long id);
+    Optional<Professor> findByEmail(String email);
+
 }

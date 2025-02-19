@@ -1,14 +1,12 @@
 package br.com.ufpb.GerenciadorEscolar.model;
 
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 
 import java.io.Serializable;
 
-@MappedSuperclass
-public abstract class Usuario {
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED) // Garante tabelas separadas para cada tipo de usuário
+public abstract class Usuario implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

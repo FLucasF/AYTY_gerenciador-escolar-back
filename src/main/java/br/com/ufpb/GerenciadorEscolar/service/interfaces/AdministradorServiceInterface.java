@@ -12,4 +12,6 @@ public interface AdministradorServiceInterface {
     void desativarAdministrador(Long id);
     Administrador cadastrarAdministrador(Administrador administrador);
     Administrador atualizarAdministrador(Long id, Administrador administrador);
+    Optional<Administrador> findByEmail(String email);
+
 }

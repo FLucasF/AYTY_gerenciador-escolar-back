@@ -12,4 +12,6 @@ public interface AlunoServiceInterface {
     Aluno cadastrarAluno(Aluno aluno);
     Aluno atualizarAluno(Long id, Aluno novosDados);
     void desativarAluno(Long id);
+    Optional<Aluno> findByEmail(String email);
+
 }

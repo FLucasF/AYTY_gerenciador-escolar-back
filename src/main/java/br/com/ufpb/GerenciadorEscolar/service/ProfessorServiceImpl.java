@@ -51,4 +51,10 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
                     professorRepository.save(professor);
                 });
     }
+
+    @Override
+    public Optional<Professor> findByEmail(String email) {
+        return professorRepository.findByEmail(email);
+    }
+
 }

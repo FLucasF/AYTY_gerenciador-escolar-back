@@ -50,4 +50,10 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         admin.setAtivo(false);
         administradorRepository.save(admin);
     }
+
+    @Override
+    public Optional<Administrador> findByEmail(String email) {
+        return administradorRepository.findByEmail(email);
+    }
+
 }

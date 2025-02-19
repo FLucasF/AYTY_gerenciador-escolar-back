@@ -1,3 +1,5 @@
+app:
+  secret: MINHA_CHAVE_SECRETA_SUPER_SECRETA_COM_MUITOS_CARACTERES
 spring:
   datasource:
     url: jdbc:h2:mem:gerenciador_escolar;DB_CLOSE_DELAY=-1

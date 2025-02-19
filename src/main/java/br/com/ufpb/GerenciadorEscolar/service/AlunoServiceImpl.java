@@ -66,4 +66,10 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
     }
+
+    @Override
+    public Optional<Aluno> findByEmail(String email) {
+        return alunoRepository.findByEmail(email);
+    }
+
 }
