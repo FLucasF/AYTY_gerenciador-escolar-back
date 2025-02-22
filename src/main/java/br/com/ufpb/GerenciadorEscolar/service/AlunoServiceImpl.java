@@ -1,75 +1,81 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
+import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoRequest;
+import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
-import br.com.ufpb.GerenciadorEscolar.service.interfaces.AlunoServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class AlunoServiceImpl implements AlunoServiceInterface {
 
+    private final AlunoRepository alunoRepository;
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    private AlunoRepository alunoRepository;
-
-    /**
-     * Listar todos os alunos ativos.
-     */
-    @Override
-    public List<Aluno> listarAlunosAtivos() {
-        return alunoRepository.findAllByAtivoTrue();
+    public AlunoServiceImpl(AlunoRepository alunoRepository, PasswordEncoder passwordEncoder) {
+        this.alunoRepository = alunoRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    /**
-     * Buscar um aluno por ID.
-     */
     @Override
-    public Optional<Aluno> buscarAlunoPorId(Long id) {
-        return alunoRepository.findByIdAndAtivoTrue(id);
+    public Page<AlunoResponse> listarAlunosAtivos(Pageable pageable) {
+        return alunoRepository.findAllByAtivoTrue(pageable)
+                .map(aluno -> new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso()));
     }
 
-    /**
-     * Cadastrar um novo aluno.
-     */
     @Override
-    public Aluno cadastrarAluno(Aluno aluno) {
-        aluno.setAtivo(true); // Garante que o aluno começa como ativo
-        return alunoRepository.save(aluno);
+    public Optional<AlunoResponse> buscarAlunoPorId(Long id) {
+        return alunoRepository.findByIdAndAtivoTrue(id)
+                .map(aluno -> new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso()));
     }
 
-    /**
-     * Atualizar um aluno existente.
-     */
+
     @Override
-    public Aluno atualizarAluno(Long id, Aluno novosDados) {
-        Aluno alunoExistente = alunoRepository.findByIdAndAtivoTrue(id)
+    public AlunoResponse cadastrarAluno(AlunoRequest alunoRequest) {
+        Aluno aluno = new Aluno(
+                alunoRequest.nome(),
+                alunoRequest.email(),
+                passwordEncoder.encode(alunoRequest.senha()),
+                alunoRequest.cpf(),
+                alunoRequest.curso()
+        );
+        aluno.setAtivo(true);
+        alunoRepository.save(aluno);
+
+        return new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso());
+    }
+
+    @Override
+    public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
+        Aluno aluno = alunoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
 
-        alunoExistente.setNome(novosDados.getNome());
-        alunoExistente.setEmail(novosDados.getEmail());
-        alunoExistente.setCurso(novosDados.getCurso());
+        aluno.setNome(alunoRequest.nome());
+        aluno.setEmail(alunoRequest.email());
+        aluno.setCurso(alunoRequest.curso());
 
-        return alunoRepository.save(alunoExistente);
+        alunoRepository.save(aluno);
+        return new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso());
     }
 
-    /**
-     * Desativar um aluno.
-     */
     @Override
     public void desativarAluno(Long id) {
-        Aluno aluno = alunoRepository.findByIdAndAtivoTrue(id)
+        Aluno aluno = alunoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
-
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
     }
 
     @Override
     public Optional<Aluno> findByEmail(String email) {
-        return alunoRepository.findByEmail(email);
+        return alunoRepository.findByEmailAndAtivoTrue(email);
     }
 
 }

@@ -1,40 +1,32 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.dto.AlunoDTO;
 import br.com.ufpb.GerenciadorEscolar.dto.TurmaDTO;
+import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.Turma;
-import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
-import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
-import br.com.ufpb.GerenciadorEscolar.service.interfaces.TurmaServiceInterface;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/turmas")
 public class TurmaController {
 
-    @Autowired
-    private TurmaServiceInterface turmaService;
+    private final TurmaServiceInterface turmaService;
 
-    @Autowired
-    TurmaRepository turmaRepository;
-
-    @Autowired
-    private ProfessorRepository professorRepository;
+    public TurmaController(TurmaServiceInterface turmaService) {
+        this.turmaService = turmaService;
+    }
 
     @PostMapping
     public ResponseEntity<TurmaDTO> criarTurma(@RequestBody Turma turma) {
         Turma novaTurma = turmaService.criarTurma(turma);
-        return ResponseEntity.ok(new TurmaDTO(novaTurma));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new TurmaDTO(novaTurma));
     }
 
     @PostMapping("/{turmaId}/matricular/{alunoId}")
@@ -49,28 +41,20 @@ public class TurmaController {
         return ResponseEntity.ok(new TurmaDTO(turma));
     }
 
-
     @GetMapping
-    public ResponseEntity<List<TurmaDTO>> listarTodasTurmas() {
-        List<TurmaDTO> turmasDTO = turmaService.listarTodasTurmas().stream()
-                .map(TurmaDTO::new) // Convertendo cada `Turma` para `TurmaDTO`
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(turmasDTO);
+    public ResponseEntity<Page<TurmaDTO>> listarTodasTurmas(Pageable pageable) {
+        Page<Turma> turmasPage = turmaService.listarTodasTurmas(pageable);
+        Page<TurmaDTO> turmasDTOPage = turmasPage.map(TurmaDTO::new);
+        return ResponseEntity.ok(turmasDTOPage);
     }
 
     @GetMapping("/{turmaId}/alunos")
-    public ResponseEntity<List<AlunoDTO>> listarAlunosPorTurma(@PathVariable Long turmaId) {
-        List<Aluno> alunos = turmaService.listarAlunosPorTurma(turmaId);
-        List<AlunoDTO> alunosDTO = alunos.stream()
-                .map(aluno -> new AlunoDTO(
-                        aluno.getId(),
-                        aluno.getNome(),
-                        aluno.getEmail(),
-                        aluno.getCurso(),
-                        aluno.getTurmas() != null ? aluno.getTurmas().stream().map(turma -> turma.getNome()).collect(Collectors.toList()) : List.of()
-                ))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(alunosDTO);
+    public ResponseEntity<Page<AlunoResponse>> listarAlunosPorTurma(@PathVariable Long turmaId, Pageable pageable) {
+        Page<Aluno> alunosPage = turmaService.listarAlunosPorTurma(turmaId, pageable);
+        Page<AlunoResponse> alunosResponsePage = alunosPage.map(aluno -> new AlunoResponse(
+                aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso()
+        ));
+        return ResponseEntity.ok(alunosResponsePage);
     }
 
 
@@ -82,13 +66,14 @@ public class TurmaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deletarTurma(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarTurma(@PathVariable Long id) {
         turmaService.deletarTurma(id);
-
-        Map<String, String> resposta = new HashMap<>();
-        resposta.put("mensagem", "Turma deletada com sucesso.");
-
-        return ResponseEntity.ok(resposta);
+        return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{turmaId}/remover/{alunoId}")
+    public ResponseEntity<TurmaDTO> removerAlunoDaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        Turma turmaAtualizada = turmaService.removerAlunoDaTurma(turmaId, alunoId);
+        return ResponseEntity.ok(new TurmaDTO(turmaAtualizada));
+    }
 }

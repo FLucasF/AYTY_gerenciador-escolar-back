@@ -9,10 +9,13 @@ public class Administrador extends Usuario {
     private String setor;
     private String siape;
 
-    public Administrador() {}
+    public Administrador() {
+        super();
+        this.setRole("ROLE_ADMIN"); // 🔥 Define a role automaticamente
+    }
 
     public Administrador(String nome, String email, String senha, String cpf, String setor, String siape) {
-        super(nome, email, senha, cpf); // Chama o construtor de Usuario
+        super(nome, email, senha, cpf, "ROLE_ADMIN"); // 🔥 Role já definida corretamente
         this.setor = setor;
         this.siape = siape;
     }

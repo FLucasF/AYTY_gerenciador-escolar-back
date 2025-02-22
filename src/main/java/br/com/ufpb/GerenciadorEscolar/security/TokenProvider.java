@@ -7,41 +7,65 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import jakarta.annotation.PostConstruct;
 
+import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
+import java.util.Base64;
 
 @Service
 public class TokenProvider {
 
-    @Value("${app.secret}")
-    private String secret;
-
+    private final String secret;
     private Algorithm algorithm;
+
+    public TokenProvider(@Value("minhaChaveSecreta123456") String secret) {
+        this.secret = secret;
+    }
 
     @PostConstruct
     public void setUp() {
-        // Cria a chave de assinatura usando a chave secreta
-        algorithm = Algorithm.HMAC256(secret.getBytes());
+        Base64.getEncoder().encode(secret.getBytes());
+        this.algorithm = Algorithm.HMAC256(secret.getBytes());
     }
 
-    public String generateToken(Usuario usuario) {
+    public String generateAccessToken(Usuario usuario) {
         try {
+            String role = "ROLE_" + usuario.getClass().getSimpleName().toUpperCase();
+            Instant expiration = LocalDateTime.now().plusMinutes(15).toInstant(ZoneOffset.of("-03:00"));
+
             return JWT.create()
                     .withSubject(usuario.getEmail())
-                    .withClaim("role", usuario.getClass().getSimpleName())
-                    .withIssuedAt(Date.from(Instant.now()))
-                    .withExpiresAt(Date.from(LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"))))
+                    .withClaim("role", role)
+                    .withIssuedAt(Instant.now())
+                    .withExpiresAt(expiration)
                     .sign(algorithm);
         } catch (JWTCreationException e) {
-            throw new RuntimeException("Erro na criação do token: " + e.getMessage());
+            throw new RuntimeException("Erro na criação do access token: " + e.getMessage());
+        }
+    }
+
+    public String generateRefreshToken(Usuario usuario) {
+        try {
+            String role = "ROLE_" + usuario.getClass().getSimpleName().toUpperCase();
+            Instant expiration = LocalDateTime.now().plusDays(7).toInstant(ZoneOffset.of("-03:00"));
+
+            return JWT.create()
+                    .withSubject(usuario.getEmail())
+                    .withClaim("role", role)
+                    .withIssuedAt(Instant.now())
+                    .withExpiresAt(expiration)
+                    .sign(algorithm);
+        } catch (JWTCreationException e) {
+            throw new RuntimeException("Erro na criação do refresh token: " + e.getMessage());
         }
     }
 
     public String getSubjectByToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new RuntimeException("Token não fornecido.");
+        }
         try {
             return JWT.require(algorithm)
                     .build()

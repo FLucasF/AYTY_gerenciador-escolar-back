@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
 import br.com.ufpb.GerenciadorEscolar.model.Mural;
-import br.com.ufpb.GerenciadorEscolar.service.interfaces.MuralServiceInterface;
+import br.com.ufpb.GerenciadorEscolar.service.MuralServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +12,11 @@ import java.util.List;
 @RequestMapping("/mural")
 public class MuralController {
 
-    @Autowired
     private MuralServiceInterface muralService;
+
+    public MuralController(MuralServiceInterface muralService) {
+        this.muralService = muralService;
+    }
 
     @PostMapping
     public ResponseEntity<Mural> criarPostagem(@RequestBody Mural mural) {

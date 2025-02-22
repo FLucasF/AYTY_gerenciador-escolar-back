@@ -1,4 +1,4 @@
-package br.com.ufpb.GerenciadorEscolar.service.interfaces;
+package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.model.Mural;
 import java.util.List;

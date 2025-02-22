@@ -14,10 +14,13 @@ public class Aluno extends Usuario {
     @ManyToMany(mappedBy = "alunos")
     private List<Turma> turmas;
 
-    public Aluno() {}
+    public Aluno() {
+        super();
+        this.setRole("ROLE_ALUNO"); // 🔥 Define a role corretamente
+    }
 
     public Aluno(String nome, String email, String senha, String cpf, String curso) {
-        super(nome, email, senha, cpf);
+        super(nome, email, senha, cpf, "ROLE_ALUNO"); // 🔥 Role definida ao criar um aluno
         this.curso = curso;
     }
 

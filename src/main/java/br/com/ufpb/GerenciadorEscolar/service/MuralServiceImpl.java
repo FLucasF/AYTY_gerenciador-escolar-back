@@ -2,7 +2,6 @@ package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.model.Mural;
 import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
-import br.com.ufpb.GerenciadorEscolar.service.interfaces.MuralServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,8 +10,12 @@ import java.util.List;
 @Service
 public class MuralServiceImpl implements MuralServiceInterface {
 
+    private final MuralRepository muralRepository;
+
     @Autowired
-    private MuralRepository muralRepository;
+    public MuralServiceImpl(MuralRepository muralRepository) {
+        this.muralRepository = muralRepository;
+    }
 
     @Override
     public Mural criarPostagem(Mural mural) {

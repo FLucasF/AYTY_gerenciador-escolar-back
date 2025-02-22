@@ -2,5 +2,5 @@ spring:
   application:
     name: GerenciadorEscolar
   profiles:
-    active: dev
+    active: prod
 

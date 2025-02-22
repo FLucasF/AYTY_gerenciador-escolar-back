@@ -18,7 +18,7 @@ public class GerenciadorEscolarApplication {
 	@Bean
 	public CommandLineRunner loadAdmin(AdministradorRepository administradorRepository, PasswordEncoder passwordEncoder) {
 		return args -> {
-			administradorRepository.findByEmail("admin@dominio.com")
+			administradorRepository.findByEmailAndAtivoTrue("admin@dominio.com")
 					.ifPresentOrElse(
 							admin -> System.out.println("Admin já existe."),
 							() -> {
@@ -31,9 +31,12 @@ public class GerenciadorEscolarApplication {
 								admin.setSetor("TI");
 								admin.setSiape("123456");  // Exemplo de siape
 								administradorRepository.save(admin);
-								System.out.println("Admin criado com sucesso.");
+								System.out.println("Admin criado com sucesso." + admin.getRole());
 							}
 					);
+			// Imprime todos os administradores cadastrados
+			System.out.println("Conteúdo da tabela Administradores:");
+			administradorRepository.findAll().forEach(System.out::println);
 		};
 	}
 }

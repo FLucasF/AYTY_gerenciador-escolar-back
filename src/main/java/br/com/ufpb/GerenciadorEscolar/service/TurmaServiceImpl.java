@@ -1,4 +1,4 @@
-package br.com.ufpb.GerenciadorEscolar.service.impl;
+package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
@@ -6,13 +6,13 @@ import br.com.ufpb.GerenciadorEscolar.model.Turma;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
-import br.com.ufpb.GerenciadorEscolar.service.interfaces.TurmaServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Collections;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
 
 @Service
@@ -20,14 +20,16 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(TurmaServiceImpl.class);
 
-    @Autowired
-    private TurmaRepository turmaRepository;
+    private final TurmaRepository turmaRepository;
+    private final AlunoRepository alunoRepository;
+    private final ProfessorRepository professorRepository;
 
     @Autowired
-    private AlunoRepository alunoRepository;
-
-    @Autowired
-    private ProfessorRepository professorRepository;
+    public TurmaServiceImpl(TurmaRepository turmaRepository, AlunoRepository alunoRepository, ProfessorRepository professorRepository) {
+        this.turmaRepository = turmaRepository;
+        this.alunoRepository = alunoRepository;
+        this.professorRepository = professorRepository;
+    }
 
     @Override
     public Turma criarTurma(Turma turma) {
@@ -59,8 +61,8 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     }
 
     @Override
-    public List<Turma> listarTodasTurmas() {
-        return turmaRepository.findAll();
+    public Page<Turma> listarTodasTurmas(Pageable pageable) {
+        return turmaRepository.findAll(pageable);
     }
 
     @Override
@@ -115,15 +117,12 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     }
 
     @Override
-    public List<Aluno> listarAlunosPorTurma(Long turmaId) {
-        Turma turma = turmaRepository.findById(turmaId)
-                .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
-        List<Aluno> alunos = turma.getAlunos();
-        return alunos != null ? alunos : Collections.emptyList();
+    public Page<Aluno> listarAlunosPorTurma(Long turmaId, Pageable pageable) {
+        return alunoRepository.findByTurmasId(turmaId, pageable);
     }
 
     @Override
-    public List<Turma> listarTurmasPorProfessor(Long professorId) {
-        return turmaRepository.findByProfessorId(professorId);
+    public Page<Turma> listarTurmasPorProfessor(Long professorId, Pageable pageable) {
+        return turmaRepository.findByProfessorId(professorId, pageable);
     }
 }

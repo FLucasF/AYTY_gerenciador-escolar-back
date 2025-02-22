@@ -5,7 +5,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import java.util.List;
 
 @Entity
@@ -18,10 +17,13 @@ public class Professor extends Usuario {
     @OneToMany(mappedBy = "professor", cascade = CascadeType.ALL)
     private List<Turma> turmas;
 
-    public Professor() {}
+    public Professor() {
+        super();
+        this.setRole("ROLE_PROFESSOR"); // 🔥 Define a role corretamente
+    }
 
     public Professor(String nome, String email, String senha, String cpf, String departamento, String siape) {
-        super(nome, email, senha, cpf); // Chama o construtor da classe Usuario
+        super(nome, email, senha, cpf, "ROLE_PROFESSOR"); // 🔥 Role definida ao criar um professor
         this.departamento = departamento;
         this.siape = siape;
     }

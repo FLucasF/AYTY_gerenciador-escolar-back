@@ -18,13 +18,17 @@ public abstract class Usuario implements Serializable {
     private String cpf;
     private boolean ativo = true;
 
+    @Column(nullable = false) // 🔥 Agora cada usuário tem uma role
+    private String role;
+
     public Usuario() {}
 
-    public Usuario(String nome, String email, String senha, String cpf) {
+    public Usuario(String nome, String email, String senha, String cpf, String role) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.cpf = cpf;
+        this.role = role;
     }
 
     public Long getId() { return id; }
@@ -44,4 +48,7 @@ public abstract class Usuario implements Serializable {
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }
