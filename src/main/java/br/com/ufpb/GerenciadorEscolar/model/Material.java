@@ -26,6 +26,8 @@ public class Material {
     @JoinColumn(name = "professor_id", nullable = false)
     private Professor professor;
 
+    private boolean ativo = true;
+
     public Long getId() {
         return id;
     }
@@ -64,5 +66,13 @@ public class Material {
 
     public void setProfessor(Professor professor) {
         this.professor = professor;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 }

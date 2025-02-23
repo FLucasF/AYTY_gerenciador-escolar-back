@@ -1,9 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.dto.TurmaDTO;
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
+import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaRequest;
+import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaResponse;
 import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,45 +22,26 @@ public class TurmaController {
     }
 
     @PostMapping
-    public ResponseEntity<TurmaDTO> criarTurma(@RequestBody Turma turma) {
-        Turma novaTurma = turmaService.criarTurma(turma);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new TurmaDTO(novaTurma));
-    }
-
-    @PostMapping("/{turmaId}/matricular/{alunoId}")
-    public ResponseEntity<TurmaDTO> matricularAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
-        Turma turma = turmaService.matricularAluno(turmaId, alunoId);
-        return ResponseEntity.ok(new TurmaDTO(turma));
+    public ResponseEntity<TurmaResponse> criarTurma(@RequestBody TurmaRequest turmaRequest) {
+        TurmaResponse novaTurma = turmaService.criarTurma(turmaRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novaTurma);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TurmaDTO> atualizarTurma(@PathVariable Long id, @RequestBody Turma turmaAtualizada) {
-        Turma turma = turmaService.atualizarTurma(id, turmaAtualizada);
-        return ResponseEntity.ok(new TurmaDTO(turma));
+    public ResponseEntity<TurmaResponse> atualizarTurma(@PathVariable Long id, @RequestBody TurmaRequest turmaRequest) {
+        TurmaResponse turmaAtualizada = turmaService.atualizarTurma(id, turmaRequest);
+        return ResponseEntity.ok(turmaAtualizada);
     }
 
     @GetMapping
-    public ResponseEntity<Page<TurmaDTO>> listarTodasTurmas(Pageable pageable) {
-        Page<Turma> turmasPage = turmaService.listarTodasTurmas(pageable);
-        Page<TurmaDTO> turmasDTOPage = turmasPage.map(TurmaDTO::new);
-        return ResponseEntity.ok(turmasDTOPage);
+    public ResponseEntity<Page<TurmaResponse>> listarTodasTurmas(Pageable pageable) {
+        return ResponseEntity.ok(turmaService.listarTodasTurmas(pageable));
     }
-
-    @GetMapping("/{turmaId}/alunos")
-    public ResponseEntity<Page<AlunoResponse>> listarAlunosPorTurma(@PathVariable Long turmaId, Pageable pageable) {
-        Page<Aluno> alunosPage = turmaService.listarAlunosPorTurma(turmaId, pageable);
-        Page<AlunoResponse> alunosResponsePage = alunosPage.map(aluno -> new AlunoResponse(
-                aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso()
-        ));
-        return ResponseEntity.ok(alunosResponsePage);
-    }
-
 
     @GetMapping("/{id}")
-    public ResponseEntity<TurmaDTO> buscarTurmaPorId(@PathVariable Long id) {
-        Optional<Turma> turma = turmaService.buscarTurmaPorId(id);
-        return turma.map(value -> ResponseEntity.ok(new TurmaDTO(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<TurmaResponse> buscarTurmaPorId(@PathVariable Long id) {
+        Optional<TurmaResponse> turma = turmaService.buscarTurmaPorId(id);
+        return turma.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -71,9 +50,14 @@ public class TurmaController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{turmaId}/remover/{alunoId}")
-    public ResponseEntity<TurmaDTO> removerAlunoDaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
-        Turma turmaAtualizada = turmaService.removerAlunoDaTurma(turmaId, alunoId);
-        return ResponseEntity.ok(new TurmaDTO(turmaAtualizada));
+    @PostMapping("/{turmaId}/matricular/{alunoId}")
+    public ResponseEntity<TurmaResponse> matricularAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        TurmaResponse turmaAtualizada = turmaService.matricularAluno(turmaId, alunoId);
+        return ResponseEntity.ok(turmaAtualizada);
+    }
+
+    @GetMapping("/professor/{professorId}")
+    public ResponseEntity<Page<TurmaResponse>> listarTurmasPorProfessor(@PathVariable Long professorId, Pageable pageable) {
+        return ResponseEntity.ok(turmaService.listarTurmasPorProfessor(professorId, pageable));
     }
 }

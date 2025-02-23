@@ -2,6 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
+import br.com.ufpb.GerenciadorEscolar.mapper.AdministradorMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,39 +18,37 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
     private final AdministradorRepository administradorRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdministradorMapper administradorMapper;
 
     @Autowired
-    public AdministradorServiceImpl(AdministradorRepository administradorRepository, PasswordEncoder passwordEncoder) {
+    public AdministradorServiceImpl(AdministradorRepository administradorRepository,
+                                    PasswordEncoder passwordEncoder,
+                                    AdministradorMapper administradorMapper) {
         this.administradorRepository = administradorRepository;
         this.passwordEncoder = passwordEncoder;
+        this.administradorMapper = administradorMapper;
     }
 
     @Override
     public Page<AdministradorResponse> listarAdministradoresAtivos(Pageable pageable) {
         return administradorRepository.findAllByAtivoTrue(pageable)
-                .map(admin -> new AdministradorResponse(admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(), admin.getSetor(), admin.getSiape()));
+                .map(administradorMapper::toResponse);
     }
 
     @Override
     public Optional<AdministradorResponse> buscarAdministradorPorId(Long id) {
         return administradorRepository.findByIdAndAtivoTrue(id)
-                .map(admin -> new AdministradorResponse(admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(), admin.getSetor(), admin.getSiape()));
+                .map(administradorMapper::toResponse);
     }
 
     @Override
     public AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest) {
-        Administrador admin = new Administrador(
-                administradorRequest.nome(),
-                administradorRequest.email(),
-                passwordEncoder.encode(administradorRequest.senha()),
-                administradorRequest.cpf(),
-                administradorRequest.setor(),
-                administradorRequest.siape()
-        );
+        Administrador admin = administradorMapper.toEntity(administradorRequest);
+        // Criptografa a senha
+        admin.setSenha(passwordEncoder.encode(admin.getSenha()));
         admin.setAtivo(true);
         administradorRepository.save(admin);
-
-        return new AdministradorResponse(admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(), admin.getSetor(), admin.getSiape());
+        return administradorMapper.toResponse(admin);
     }
 
     @Override
@@ -57,12 +56,14 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         Administrador admin = administradorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Administrador não encontrado"));
 
+        // Atualize os campos (você pode usar o mapper para atualizar também se desejar)
         admin.setNome(administradorRequest.nome());
         admin.setEmail(administradorRequest.email());
         admin.setSetor(administradorRequest.setor());
+        // Se desejar atualizar a senha, adicione lógica extra aqui
 
         administradorRepository.save(admin);
-        return new AdministradorResponse(admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(), admin.getSetor(), admin.getSiape());
+        return administradorMapper.toResponse(admin);
     }
 
     @Override
@@ -77,6 +78,4 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     public Optional<Administrador> findByEmail(String email) {
         return administradorRepository.findByEmailAndAtivoTrue(email);
     }
-
-
 }

@@ -18,9 +18,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 
@@ -49,22 +46,6 @@ public class SecurityConfig {
         return new ProviderManager(authProvider);
     }
 
-    // Configure o CorsFilter para uso global pelo Spring Security
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        // Defina a(s) origem(s) permitida(s) – altere conforme sua necessidade
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        // Permite que cookies e credenciais sejam enviados
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return new CorsFilter(source);
-    }
-
     // Configure a cadeia de filtros de segurança
     @Bean
     public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http,
@@ -72,25 +53,20 @@ public class SecurityConfig {
         return http
                 // Desabilita o CSRF, pois estamos usando JWT e API REST
                 .csrf(csrf -> csrf.disable())
-                // Usa a configuração de CORS definida pelo CorsFilter (já declarado como bean)
+                // Usa a configuração de CORS definida globalmente (via WebConfig)
                 .cors(Customizer.withDefaults())
                 // Configura o gerenciamento de sessão para STATELESS
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Define as regras de autorização
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        // Qualquer GET para /usuarios/** requer que o usuário esteja autenticado
                         .requestMatchers(HttpMethod.GET, "/usuarios/**").authenticated()
-                        // Outras operações em /usuarios/** exigem role ADMIN (por exemplo)
                         .requestMatchers(HttpMethod.POST, "/usuarios/**").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/usuarios/**").hasRole("ADMINISTRADOR")
-                        // Você pode ajustar as demais regras conforme sua necessidade
                         .anyRequest().authenticated()
                 )
-                // Permite o uso de frames (se necessário, por exemplo, para o H2 Console)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                // Adiciona o seu filtro de segurança (JWT) antes do UsernamePasswordAuthenticationFilter
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

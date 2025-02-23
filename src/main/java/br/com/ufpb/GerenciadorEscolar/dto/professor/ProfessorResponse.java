@@ -1,3 +1,4 @@
+// 📌 ProfessorResponse.java
 package br.com.ufpb.GerenciadorEscolar.dto.professor;
 
 public record ProfessorResponse(

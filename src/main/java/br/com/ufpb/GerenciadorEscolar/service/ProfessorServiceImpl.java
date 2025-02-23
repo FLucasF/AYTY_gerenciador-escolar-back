@@ -2,6 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
+import br.com.ufpb.GerenciadorEscolar.mapper.ProfessorMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,40 +18,36 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
 
     private final ProfessorRepository professorRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProfessorMapper professorMapper;
 
     @Autowired
-    public ProfessorServiceImpl(ProfessorRepository professorRepository, PasswordEncoder passwordEncoder) {
+    public ProfessorServiceImpl(ProfessorRepository professorRepository,
+                                PasswordEncoder passwordEncoder,
+                                ProfessorMapper professorMapper) {
         this.professorRepository = professorRepository;
         this.passwordEncoder = passwordEncoder;
+        this.professorMapper = professorMapper;
     }
 
     @Override
     public Page<ProfessorResponse> listarProfessoresAtivos(Pageable pageable) {
         return professorRepository.findAllByAtivoTrue(pageable)
-                .map(prof -> new ProfessorResponse(prof.getId(), prof.getNome(), prof.getEmail(), prof.getCpf(), prof.getDepartamento(), prof.getSiape()));
+                .map(professorMapper::toResponse);
     }
 
     @Override
     public Optional<ProfessorResponse> buscarProfessorPorId(Long id) {
         return professorRepository.findByIdAndAtivoTrue(id)
-                .map(professor -> new ProfessorResponse(professor.getId(), professor.getNome(), professor.getEmail(), professor.getCpf(), professor.getDepartamento(), professor.getSiape()));
+                .map(professorMapper::toResponse);
     }
-
 
     @Override
     public ProfessorResponse cadastrarProfessor(ProfessorRequest professorRequest) {
-        Professor professor = new Professor(
-                professorRequest.nome(),
-                professorRequest.email(),
-                passwordEncoder.encode(professorRequest.senha()),
-                professorRequest.cpf(),
-                professorRequest.departamento(),
-                professorRequest.siape()
-        );
+        Professor professor = professorMapper.toEntity(professorRequest);
+        professor.setSenha(passwordEncoder.encode(professorRequest.senha()));
         professor.setAtivo(true);
         professorRepository.save(professor);
-
-        return new ProfessorResponse(professor.getId(), professor.getNome(), professor.getEmail(), professor.getCpf(), professor.getDepartamento(), professor.getSiape());
+        return professorMapper.toResponse(professor);
     }
 
     @Override
@@ -63,7 +60,7 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
         professor.setDepartamento(professorRequest.departamento());
 
         professorRepository.save(professor);
-        return new ProfessorResponse(professor.getId(), professor.getNome(), professor.getEmail(), professor.getCpf(), professor.getDepartamento(), professor.getSiape());
+        return professorMapper.toResponse(professor);
     }
 
     @Override
@@ -78,5 +75,4 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
     public Optional<Professor> findByEmail(String email) {
         return professorRepository.findByEmailAndAtivoTrue(email);
     }
-
 }

@@ -1,12 +1,14 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.model.Material;
+import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialRequest;
+import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialResponse;
 import br.com.ufpb.GerenciadorEscolar.service.MaterialServiceInterface;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/materiais")
@@ -19,13 +21,19 @@ public class MaterialController {
     }
 
     @PostMapping
-    public ResponseEntity<Material> enviarMaterial(@RequestBody Material material) {
-        Material novoMaterial = materialService.enviarMaterial(material);
-        return ResponseEntity.ok(novoMaterial);
+    public ResponseEntity<MaterialResponse> enviarMaterial(@RequestBody MaterialRequest materialRequest) {
+        MaterialResponse novoMaterial = materialService.enviarMaterial(materialRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoMaterial);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MaterialResponse> buscarMaterialPorId(@PathVariable Long id) {
+        Optional<MaterialResponse> material = materialService.buscarMaterialPorId(id);
+        return material.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/turma/{idTurma}")
-    public ResponseEntity<List<Material>> listarMateriaisPorTurma(@PathVariable Long idTurma) {
+    public ResponseEntity<List<MaterialResponse>> listarMateriaisPorTurma(@PathVariable Long idTurma) {
         return ResponseEntity.ok(materialService.listarMateriaisPorTurma(idTurma));
     }
 
@@ -35,4 +43,3 @@ public class MaterialController {
         return ResponseEntity.noContent().build();
     }
 }
-

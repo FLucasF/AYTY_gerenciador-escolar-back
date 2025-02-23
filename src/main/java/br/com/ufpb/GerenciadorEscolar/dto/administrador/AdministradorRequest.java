@@ -1,3 +1,4 @@
+// 📌 AdministradorRequest.java
 package br.com.ufpb.GerenciadorEscolar.dto.administrador;
 
 import jakarta.validation.constraints.Email;

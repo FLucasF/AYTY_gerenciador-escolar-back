@@ -1,6 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.service;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
+
+import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
+import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaRequest;
+import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -8,24 +10,40 @@ import java.util.Optional;
 
 public interface TurmaServiceInterface {
 
-    Turma criarTurma(Turma turma);
+    /**
+     * Cria uma nova turma com base nos dados fornecidos no DTO de request.
+     */
+    TurmaResponse criarTurma(TurmaRequest turmaRequest);
 
-    Turma atualizarTurma(Long id, Turma novaTurma);
+    /**
+     * Atualiza os dados de uma turma existente com base no ID e nos dados fornecidos.
+     */
+    TurmaResponse atualizarTurma(Long id, TurmaRequest turmaRequest);
 
-    // Alterado para retornar Page
-    Page<Turma> listarTodasTurmas(Pageable pageable);
+    /**
+     * Lista todas as turmas disponíveis com paginação.
+     */
+    Page<TurmaResponse> listarTodasTurmas(Pageable pageable);
 
-    Optional<Turma> buscarTurmaPorId(Long id);
+    /**
+     * Busca uma turma pelo ID e retorna um Optional contendo a resposta se encontrada.
+     */
+    Optional<TurmaResponse> buscarTurmaPorId(Long id);
 
+    /**
+     * Deleta uma turma com base no ID.
+     */
     void deletarTurma(Long id);
 
-    Turma matricularAluno(Long turmaId, Long alunoId);
+    /**
+     * Matricula um aluno em uma turma específica.
+     */
+    TurmaResponse matricularAluno(Long turmaId, Long alunoId);
 
-    Turma removerAlunoDaTurma(Long turmaId, Long alunoId);
+    /**
+     * Lista todas as turmas associadas a um professor com paginação.
+     */
+    Page<TurmaResponse> listarTurmasPorProfessor(Long professorId, Pageable pageable);
 
-    // Já retorna Page para alunos
-    Page<Aluno> listarAlunosPorTurma(Long turmaId, Pageable pageable);
-
-    // Novo: listagem de turmas por professor com paginação
-    Page<Turma> listarTurmasPorProfessor(Long professorId, Pageable pageable);
+    Page<AlunoResponse> listarAlunosPorTurma(Long turmaId, Pageable pageable);
 }

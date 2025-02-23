@@ -29,6 +29,9 @@ public class Turma {
     )
     private List<Aluno> alunos;
 
+    private boolean ativo = true;
+
+
     public Long getId() {
         return id;
     }
@@ -75,5 +78,13 @@ public class Turma {
 
     public void setAlunos(List<Aluno> alunos) {
         this.alunos = alunos;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 }

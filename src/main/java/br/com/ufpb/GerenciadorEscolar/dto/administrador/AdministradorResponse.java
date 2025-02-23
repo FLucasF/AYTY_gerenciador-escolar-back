@@ -1,3 +1,4 @@
+// 📌 AdministradorResponse.java
 package br.com.ufpb.GerenciadorEscolar.dto.administrador;
 
 public record AdministradorResponse(

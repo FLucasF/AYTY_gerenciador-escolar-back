@@ -1,51 +1,53 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
+import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
+import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
+import br.com.ufpb.GerenciadorEscolar.mapper.MuralMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Mural;
 import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
+import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MuralServiceImpl implements MuralServiceInterface {
 
     private final MuralRepository muralRepository;
+    private final TurmaRepository turmaRepository;
+    private final MuralMapper muralMapper;
 
     @Autowired
-    public MuralServiceImpl(MuralRepository muralRepository) {
+    public MuralServiceImpl(MuralRepository muralRepository, TurmaRepository turmaRepository, MuralMapper muralMapper) {
         this.muralRepository = muralRepository;
+        this.turmaRepository = turmaRepository;
+        this.muralMapper = muralMapper;
     }
 
     @Override
-    public Mural criarPostagem(Mural mural) {
-        return muralRepository.save(mural);
+    public MuralResponse criarPostagem(MuralRequest muralRequest) {
+        Mural mural = muralMapper.toEntity(muralRequest);
+        mural.setAtivo(true);
+        muralRepository.save(mural);
+        return muralMapper.toResponse(mural);
     }
-
-    public Mural buscarPostagemPorId(Long id) {
-        return muralRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
-    }
-
 
     @Override
-    public List<Mural> listarPostagensPorTurma(Long idTurma) {
-        return muralRepository.findByTurmaId(idTurma);
+    public Optional<MuralResponse> buscarPostagemPorId(Long id) {
+        return muralRepository.findById(id).map(muralMapper::toResponse);
+    }
+
+    @Override
+    public List<MuralResponse> listarPostagensPorTurma(Long idTurma) {
+        return muralRepository.findByTurmaIdAndAtivoTrue(idTurma).stream().map(muralMapper::toResponse).toList();
     }
 
     @Override
     public void deletarPostagem(Long id) {
-        muralRepository.deleteById(id);
-    }
-
-    public Mural atualizarPostagem(Long id, Mural novaPostagem) {
         Mural mural = muralRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
-
-        mural.setTitulo(novaPostagem.getTitulo());
-        mural.setConteudo(novaPostagem.getConteudo());
-
-        return muralRepository.save(mural);
+        mural.setAtivo(false);
+        muralRepository.save(mural);
     }
-
 }

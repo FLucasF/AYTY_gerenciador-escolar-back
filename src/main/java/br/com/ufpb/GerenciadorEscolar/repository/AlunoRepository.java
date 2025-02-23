@@ -11,13 +11,15 @@ import java.util.Optional;
 @Repository
 public interface AlunoRepository extends JpaRepository<Aluno, Long> {
 
-    // Retorna o primeiro aluno ativo com o email fornecido
+    // Busca por email apenas entre os alunos ativos
     Optional<Aluno> findByEmailAndAtivoTrue(String email);
 
+    // Retorna todos os alunos ativos com paginação
     Page<Aluno> findAllByAtivoTrue(Pageable pageable);
 
+    // Retorna o aluno ativo com o id informado
     Optional<Aluno> findByIdAndAtivoTrue(Long id);
 
+    // Busca turmas em que o aluno ativo está matriculado
     Page<Aluno> findByTurmasId(Long turmaId, Pageable pageable);
 }
-

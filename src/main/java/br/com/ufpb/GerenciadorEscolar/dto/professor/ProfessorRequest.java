@@ -1,3 +1,4 @@
+// 📌 ProfessorRequest.java
 package br.com.ufpb.GerenciadorEscolar.dto.professor;
 
 import jakarta.validation.constraints.Email;

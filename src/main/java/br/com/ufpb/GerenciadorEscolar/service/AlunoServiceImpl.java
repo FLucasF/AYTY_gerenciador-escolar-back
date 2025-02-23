@@ -2,6 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.service;
 
 import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
+import br.com.ufpb.GerenciadorEscolar.mapper.AlunoMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,52 +18,47 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
     private final AlunoRepository alunoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AlunoMapper alunoMapper;
 
     @Autowired
-    public AlunoServiceImpl(AlunoRepository alunoRepository, PasswordEncoder passwordEncoder) {
+    public AlunoServiceImpl(AlunoRepository alunoRepository,
+                            PasswordEncoder passwordEncoder,
+                            AlunoMapper alunoMapper) {
         this.alunoRepository = alunoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.alunoMapper = alunoMapper;
     }
 
     @Override
     public Page<AlunoResponse> listarAlunosAtivos(Pageable pageable) {
         return alunoRepository.findAllByAtivoTrue(pageable)
-                .map(aluno -> new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso()));
+                .map(alunoMapper::toResponse);
     }
 
     @Override
     public Optional<AlunoResponse> buscarAlunoPorId(Long id) {
         return alunoRepository.findByIdAndAtivoTrue(id)
-                .map(aluno -> new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso()));
+                .map(alunoMapper::toResponse);
     }
-
 
     @Override
     public AlunoResponse cadastrarAluno(AlunoRequest alunoRequest) {
-        Aluno aluno = new Aluno(
-                alunoRequest.nome(),
-                alunoRequest.email(),
-                passwordEncoder.encode(alunoRequest.senha()),
-                alunoRequest.cpf(),
-                alunoRequest.curso()
-        );
+        Aluno aluno = alunoMapper.toEntity(alunoRequest);
+        aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
         aluno.setAtivo(true);
         alunoRepository.save(aluno);
-
-        return new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso());
+        return alunoMapper.toResponse(aluno);
     }
 
     @Override
     public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
         Aluno aluno = alunoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
-
         aluno.setNome(alunoRequest.nome());
         aluno.setEmail(alunoRequest.email());
         aluno.setCurso(alunoRequest.curso());
-
         alunoRepository.save(aluno);
-        return new AlunoResponse(aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso());
+        return alunoMapper.toResponse(aluno);
     }
 
     @Override
@@ -77,5 +73,4 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
     public Optional<Aluno> findByEmail(String email) {
         return alunoRepository.findByEmailAndAtivoTrue(email);
     }
-
 }
