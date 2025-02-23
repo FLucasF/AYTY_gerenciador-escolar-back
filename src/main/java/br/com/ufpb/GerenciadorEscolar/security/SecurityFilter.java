@@ -37,8 +37,14 @@ public class SecurityFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        String token = request.getHeader("Authorization");
+        String path = request.getServletPath();
+        // Se a URL iniciar com /auth, pula a autenticação JWT
+        if (path.startsWith("/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        String token = request.getHeader("Authorization");
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7); // Remove "Bearer "
             try {
@@ -51,9 +57,9 @@ public class SecurityFilter extends OncePerRequestFilter {
                 logger.error("Erro na autenticação do token: " + e.getMessage());
             }
         }
-
         filterChain.doFilter(request, response);
     }
+
 
 }
 

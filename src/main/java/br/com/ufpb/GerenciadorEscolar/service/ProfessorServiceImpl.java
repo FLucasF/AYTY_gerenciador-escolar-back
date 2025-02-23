@@ -47,6 +47,7 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
         professor.setSenha(passwordEncoder.encode(professorRequest.senha()));
         professor.setAtivo(true);
         professorRepository.save(professor);
+        System.out.println("Role do professor cadastrado: " + professor.getRole());
         return professorMapper.toResponse(professor);
     }
 

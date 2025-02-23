@@ -32,19 +32,24 @@ public class TokenProvider {
 
     public String generateAccessToken(Usuario usuario) {
         try {
+            System.out.println("Gerando token para o usuário: " + usuario.getEmail() +
+                    ", classe: " + usuario.getClass().getSimpleName());
             String role = "ROLE_" + usuario.getClass().getSimpleName().toUpperCase();
             Instant expiration = LocalDateTime.now().plusMinutes(15).toInstant(ZoneOffset.of("-03:00"));
 
-            return JWT.create()
+            String token = JWT.create()
                     .withSubject(usuario.getEmail())
                     .withClaim("role", role)
                     .withIssuedAt(Instant.now())
                     .withExpiresAt(expiration)
                     .sign(algorithm);
+            System.out.println("Token gerado: " + token);
+            return token;
         } catch (JWTCreationException e) {
             throw new RuntimeException("Erro na criação do access token: " + e.getMessage());
         }
     }
+
 
     public String generateRefreshToken(Usuario usuario) {
         try {

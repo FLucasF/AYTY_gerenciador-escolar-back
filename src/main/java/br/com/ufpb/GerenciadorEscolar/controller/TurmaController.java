@@ -22,6 +22,14 @@ public class TurmaController {
         this.turmaService = turmaService;
     }
 
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<Page<TurmaResponse>> listarTurmasDoUsuario(@PathVariable Long usuarioId, Pageable pageable) {
+        Page<TurmaResponse> turmas = turmaService.listarTurmasDoUsuario(usuarioId, pageable);
+        return ResponseEntity.ok(turmas);
+    }
+
+
+
     @PostMapping
     public ResponseEntity<TurmaResponse> criarTurma(@RequestBody TurmaRequest turmaRequest) {
         TurmaResponse novaTurma = turmaService.criarTurma(turmaRequest);

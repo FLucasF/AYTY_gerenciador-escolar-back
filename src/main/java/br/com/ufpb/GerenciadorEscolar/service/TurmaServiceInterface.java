@@ -47,4 +47,5 @@ public interface TurmaServiceInterface {
 
     Page<AlunoResponse> listarAlunosPorTurma(Long turmaId, Pageable pageable);
     Page<AlunoResponse> removerAlunoDaTurma(Long turmaId, Long alunoId);
+    Page<TurmaResponse> listarTurmasDoUsuario(Long usuarioId, Pageable pageable);
 }

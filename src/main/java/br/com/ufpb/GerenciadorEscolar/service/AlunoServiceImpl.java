@@ -46,6 +46,7 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         Aluno aluno = alunoMapper.toEntity(alunoRequest);
         aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
         aluno.setAtivo(true);
+        System.out.println("Role do professor cadastrado: " + aluno.getRole());
         alunoRepository.save(aluno);
         return alunoMapper.toResponse(aluno);
     }

@@ -48,6 +48,7 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         admin.setSenha(passwordEncoder.encode(admin.getSenha()));
         admin.setAtivo(true);
         administradorRepository.save(admin);
+        System.out.println("Role do professor cadastrado: " + admin.getRole());
         return administradorMapper.toResponse(admin);
     }
 

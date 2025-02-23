@@ -60,10 +60,17 @@ public class SecurityConfig {
                 // Define as regras de autorização
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")  // Qualquer método para usuários
-                        .requestMatchers("/turmas/**").hasRole("ADMINISTRADOR")  // Permite qualquer método
+                        .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
+                        // Regra específica para GET em /turmas/usuario/**
+                        .requestMatchers(HttpMethod.GET, "/turmas/usuario/**").hasAnyRole("ADMINISTRADOR", "PROFESSOR", "ALUNO")
+                        .requestMatchers(HttpMethod.GET, "/turmas/**", "/mural/**").hasAnyRole("ADMINISTRADOR", "PROFESSOR", "ALUNO")
+                        // Regras para demais métodos em /turmas/**
+                        .requestMatchers("/turmas/**").hasRole("ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
+
+
+
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

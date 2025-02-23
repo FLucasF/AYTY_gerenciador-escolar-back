@@ -44,33 +44,71 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public TurmaResponse criarTurma(TurmaRequest turmaRequest) {
-        Turma turma = turmaMapper.toEntity(turmaRequest); // 🔹 Agora apenas mapeia os dados básicos
+        System.out.println("📥 Recebendo requisição para criar turma: " + turmaRequest);
 
-        // 🔹 Resolver professor
-        Professor professor = professorRepository.findById(turmaRequest.professorId())
-                .orElseThrow(() -> new RuntimeException("Professor não encontrado"));
-        turma.setProfessor(professor);
+        Turma turma = turmaMapper.toEntity(turmaRequest);
 
-        turmaRepository.save(turma);
-        return turmaMapper.toResponse(turma);
+        if (turmaRequest.professorId() != null) {
+            System.out.println("🔎 Buscando professor com ID: " + turmaRequest.professorId());
+            Professor professor = professorRepository.findById(turmaRequest.professorId())
+                    .orElseThrow(() -> new RuntimeException("❌ Professor não encontrado"));
+
+            turma.setProfessor(professor);
+            System.out.println("✅ Professor associado: " + professor.getNome());
+        } else {
+            System.out.println("⚠️ Nenhum professor atribuído.");
+        }
+
+        turma = turmaRepository.saveAndFlush(turma); // 🔥 Forçando persistência
+
+        // 🔥 Aqui garantimos que `professorId` seja enviado no retorno
+        TurmaResponse response = new TurmaResponse(
+                turma.getId(),
+                turma.getNome(),
+                turma.getCodigo(),
+                turma.getSemestre(),
+                turma.getProfessor() != null ? turma.getProfessor().getId() : null
+        );
+
+        System.out.println("📤 Retornando resposta da turma: " + response);
+        return response;
     }
+
+
 
     @Override
     public TurmaResponse atualizarTurma(Long id, TurmaRequest turmaRequest) {
         Turma turma = turmaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
 
+        // Atualiza os campos permitidos
         turma.setNome(turmaRequest.nome());
-        turma.setCodigo(turmaRequest.codigo());
         turma.setSemestre(turmaRequest.semestre());
+        turma.setCodigo(turmaRequest.codigo());
 
-        // 🔹 Resolver professor
-        Professor professor = professorRepository.findById(turmaRequest.professorId())
-                .orElseThrow(() -> new RuntimeException("Professor não encontrado"));
-        turma.setProfessor(professor);
+        if (turmaRequest.professorId() != null) {
+            Professor professor = professorRepository.findById(turmaRequest.professorId())
+                    .orElseThrow(() -> new RuntimeException("Professor não encontrado"));
+            turma.setProfessor(professor);
+            System.out.println("🔎 Associando Professor ID: " + professor.getId());
+        } else {
+            turma.setProfessor(null);
+        }
 
-        turmaRepository.save(turma);
-        return turmaMapper.toResponse(turma);
+        // Salva e força o flush para confirmar a atualização no DB
+        turma = turmaRepository.saveAndFlush(turma);
+        System.out.println("✅ Após salvar, Turma.getProfessor(): " +
+                (turma.getProfessor() != null ? turma.getProfessor().getId() : "null"));
+
+        // Cria a resposta garantindo que o professorId seja incluído
+        Long professorId = (turma.getProfessor() != null) ? turma.getProfessor().getId() : null;
+        return new TurmaResponse(
+                turma.getId(),
+                turma.getNome(),
+                turma.getCodigo(),
+                turma.getSemestre(),
+                professorId
+        );
     }
 
     @Override
@@ -159,5 +197,33 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
         return new PageImpl<>(alunosAtualizados);
     }
+
+    @Override
+    public Page<TurmaResponse> listarTurmasDoUsuario(Long usuarioId, Pageable pageable) {
+        // Tenta buscar como Professor
+        Optional<Professor> professorOpt = professorRepository.findById(usuarioId);
+        if (professorOpt.isPresent()) {
+            // Se for professor, busca turmas associadas ao professor
+            return turmaRepository.findByProfessorId(usuarioId, pageable)
+                    .map(turmaMapper::toResponse);
+        }
+
+        // Caso não seja professor, tenta como Aluno
+        Optional<Aluno> alunoOpt = alunoRepository.findById(usuarioId);
+        if (alunoOpt.isPresent()) {
+            Aluno aluno = alunoOpt.get();
+            List<TurmaResponse> turmaResponses = aluno.getTurmas()
+                    .stream()
+                    .map(turmaMapper::toResponse)
+                    .toList();
+
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), turmaResponses.size());
+            return new PageImpl<>(turmaResponses.subList(start, end), pageable, turmaResponses.size());
+        }
+
+        throw new RuntimeException("Usuário não encontrado");
+    }
+
 
 }
