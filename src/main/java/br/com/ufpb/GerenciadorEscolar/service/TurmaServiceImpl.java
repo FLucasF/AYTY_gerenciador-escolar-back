@@ -133,4 +133,31 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
         return new PageImpl<>(alunos.subList(start, end), pageable, alunos.size());
     }
+
+    @Override
+    public Page<AlunoResponse> removerAlunoDaTurma(Long turmaId, Long alunoId) {
+        Turma turma = turmaRepository.findById(turmaId)
+                .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
+
+        Aluno aluno = alunoRepository.findById(alunoId)
+                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+
+        // 🔹 Remove o aluno da turma
+        if (turma.getAlunos().contains(aluno)) {
+            turma.getAlunos().remove(aluno);
+            aluno.getTurmas().remove(turma);
+            turmaRepository.save(turma);
+        } else {
+            throw new RuntimeException("Aluno não está matriculado nesta turma.");
+        }
+
+        // 🔹 Retorna a lista atualizada de alunos
+        List<AlunoResponse> alunosAtualizados = turma.getAlunos()
+                .stream()
+                .map(alunoMapper::toResponse)
+                .toList();
+
+        return new PageImpl<>(alunosAtualizados);
+    }
+
 }

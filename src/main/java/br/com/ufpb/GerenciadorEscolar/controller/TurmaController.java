@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
+import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
 import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaResponse;
 import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
@@ -60,4 +61,18 @@ public class TurmaController {
     public ResponseEntity<Page<TurmaResponse>> listarTurmasPorProfessor(@PathVariable Long professorId, Pageable pageable) {
         return ResponseEntity.ok(turmaService.listarTurmasPorProfessor(professorId, pageable));
     }
+
+    @GetMapping("/{turmaId}/alunos")
+    public ResponseEntity<Page<AlunoResponse>> listarAlunosPorTurma(
+            @PathVariable Long turmaId, Pageable pageable) {
+        return ResponseEntity.ok(turmaService.listarAlunosPorTurma(turmaId, pageable));
+    }
+
+    @DeleteMapping("/{turmaId}/remover/{alunoId}")
+    public ResponseEntity<Page<AlunoResponse>> removerAlunoDaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        Page<AlunoResponse> alunosAtualizados = turmaService.removerAlunoDaTurma(turmaId, alunoId);
+        return ResponseEntity.ok(alunosAtualizados);
+    }
+
+
 }

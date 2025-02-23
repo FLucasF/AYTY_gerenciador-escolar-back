@@ -60,10 +60,8 @@ public class SecurityConfig {
                 // Define as regras de autorização
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/usuarios/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/usuarios/**").hasAuthority("ROLE_ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/usuarios/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/usuarios/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")  // Qualquer método para usuários
+                        .requestMatchers("/turmas/**").hasRole("ADMINISTRADOR")  // Permite qualquer método
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
