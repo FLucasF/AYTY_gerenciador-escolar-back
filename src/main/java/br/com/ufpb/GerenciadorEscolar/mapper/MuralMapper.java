@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface MuralMapper {
+    @Mapping(target = "professorId", source = "professor.id")
     MuralResponse toResponse(Mural mural);
     Mural toEntity(MuralRequest muralRequest);
 }

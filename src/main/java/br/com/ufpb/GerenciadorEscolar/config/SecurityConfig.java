@@ -61,13 +61,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
-                        // Regra específica para GET em /turmas/usuario/**
-                        .requestMatchers(HttpMethod.GET, "/turmas/usuario/**").hasAnyRole("ADMINISTRADOR", "PROFESSOR", "ALUNO")
+                        // Permite GET para /turmas/** e /mural/** para ADMINISTRADOR, PROFESSOR e ALUNO
                         .requestMatchers(HttpMethod.GET, "/turmas/**", "/mural/**").hasAnyRole("ADMINISTRADOR", "PROFESSOR", "ALUNO")
-                        // Regras para demais métodos em /turmas/**
-                        .requestMatchers("/turmas/**").hasRole("ADMINISTRADOR")
+                        // Exige que apenas professores possam fazer POST em /mural
+                        .requestMatchers(HttpMethod.POST, "/mural/**").hasRole("PROFESSOR")
+                        // Outros endpoints...
                         .anyRequest().authenticated()
                 )
+
+
+
 
 
 

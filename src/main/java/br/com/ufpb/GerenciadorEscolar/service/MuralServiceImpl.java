@@ -4,6 +4,8 @@ import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.MuralMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Mural;
+import br.com.ufpb.GerenciadorEscolar.model.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.Turma;
 import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +29,35 @@ public class MuralServiceImpl implements MuralServiceInterface {
 
     @Override
     public MuralResponse criarPostagem(MuralRequest muralRequest) {
+        if (muralRequest.professorId() == null) {
+            throw new IllegalArgumentException("O campo professorId é obrigatório para publicar uma postagem.");
+        }
+
         Mural mural = muralMapper.toEntity(muralRequest);
+
+        // Define o objeto Professor manualmente
+        Professor professor = new Professor();
+        professor.setId(muralRequest.professorId());
+        mural.setProfessor(professor);
+
+        // Se necessário, também pode definir o objeto Turma manualmente
+        Turma turma = new Turma();
+        turma.setId(muralRequest.turmaId());
+        mural.setTurma(turma);
+
         mural.setAtivo(true);
-        muralRepository.save(mural);
+
+        try {
+            muralRepository.save(mural);
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao salvar a postagem no mural: " + e.getMessage(), e);
+        }
+
         return muralMapper.toResponse(mural);
     }
+
+
+
 
     @Override
     public Optional<MuralResponse> buscarPostagemPorId(Long id) {
