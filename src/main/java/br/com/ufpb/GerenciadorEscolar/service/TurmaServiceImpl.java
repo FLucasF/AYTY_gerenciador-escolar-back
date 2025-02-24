@@ -11,6 +11,8 @@ import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,6 +30,8 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     private final AlunoRepository alunoRepository;
     private final TurmaMapper turmaMapper;
     private final AlunoMapper alunoMapper; // 🔹 Injetado para conversão de Aluno -> AlunoResponse
+
+    private final Logger logger = LoggerFactory.getLogger(TurmaServiceImpl.class);  // Logger
 
     @Autowired
     public TurmaServiceImpl(TurmaRepository turmaRepository,
@@ -112,11 +116,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     }
 
     @Override
-    public Page<TurmaResponse> listarTodasTurmas(Pageable pageable) {
-        return turmaRepository.findAll(pageable).map(turmaMapper::toResponse);
-    }
-
-    @Override
     public Optional<TurmaResponse> buscarTurmaPorId(Long id) {
         return turmaRepository.findById(id).map(turmaMapper::toResponse);
     }
@@ -149,11 +148,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         }
 
         return turmaMapper.toResponse(turma);
-    }
-
-    @Override
-    public Page<TurmaResponse> listarTurmasPorProfessor(Long professorId, Pageable pageable) {
-        return turmaRepository.findByProfessorId(professorId, pageable).map(turmaMapper::toResponse);
     }
 
     @Override
@@ -198,32 +192,41 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return new PageImpl<>(alunosAtualizados);
     }
 
+
     @Override
-    public Page<TurmaResponse> listarTurmasDoUsuario(Long usuarioId, Pageable pageable) {
-        // Tenta buscar como Professor
-        Optional<Professor> professorOpt = professorRepository.findById(usuarioId);
-        if (professorOpt.isPresent()) {
-            // Se for professor, busca turmas associadas ao professor
-            return turmaRepository.findByProfessorId(usuarioId, pageable)
-                    .map(turmaMapper::toResponse);
-        }
+    public Page<TurmaResponse> listarTurmasPorAluno(Long alunoId, Pageable pageable) {
+        logger.info("📜 Listando turmas para aluno ID: " + alunoId + " com paginação: " + pageable);
 
-        // Caso não seja professor, tenta como Aluno
-        Optional<Aluno> alunoOpt = alunoRepository.findById(usuarioId);
-        if (alunoOpt.isPresent()) {
-            Aluno aluno = alunoOpt.get();
-            List<TurmaResponse> turmaResponses = aluno.getTurmas()
-                    .stream()
-                    .map(turmaMapper::toResponse)
-                    .toList();
+        // Buscando as turmas associadas ao aluno
+        Page<Turma> turmas = turmaRepository.findByAlunosIdAndAtivoTrue(alunoId, pageable);
+        logger.info("✅ Turmas encontradas para o aluno ID " + alunoId + ": " + turmas.getContent().size());
 
-            int start = (int) pageable.getOffset();
-            int end = Math.min((start + pageable.getPageSize()), turmaResponses.size());
-            return new PageImpl<>(turmaResponses.subList(start, end), pageable, turmaResponses.size());
-        }
-
-        throw new RuntimeException("Usuário não encontrado");
+        return turmas.map(turmaMapper::toResponse);
     }
+
+
+    @Override
+    public Page<TurmaResponse> listarTurmasPorProfessor(Long professorId, Pageable pageable) {
+        logger.info("📜 Listando turmas para professor ID: " + professorId + " com paginação: " + pageable);
+
+        // Buscando as turmas associadas ao professor
+        Page<Turma> turmas = turmaRepository.findByProfessorIdAndAtivoTrue(professorId, pageable);
+        logger.info("✅ Turmas encontradas para o professor ID " + professorId + ": " + turmas.getContent().size());
+
+        return turmas.map(turmaMapper::toResponse);
+    }
+
+    @Override
+    public Page<TurmaResponse> listarTodasTurmas(Pageable pageable) {
+        logger.info("📜 Listando todas as turmas com paginação: " + pageable);
+
+        // Buscando todas as turmas (para ADMIN)
+        Page<Turma> turmas = turmaRepository.findAll(pageable);
+        logger.info("✅ Total de turmas encontradas: " + turmas.getTotalElements());
+
+        return turmas.map(turmaMapper::toResponse);
+    }
+
 
 
 }

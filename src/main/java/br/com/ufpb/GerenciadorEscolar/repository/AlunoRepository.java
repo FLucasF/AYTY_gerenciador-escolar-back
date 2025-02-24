@@ -20,6 +20,4 @@ public interface AlunoRepository extends JpaRepository<Aluno, Long> {
     // Retorna o aluno ativo com o id informado
     Optional<Aluno> findByIdAndAtivoTrue(Long id);
 
-    // Busca turmas em que o aluno ativo está matriculado
-    Page<Aluno> findByTurmasId(Long turmaId, Pageable pageable);
 }

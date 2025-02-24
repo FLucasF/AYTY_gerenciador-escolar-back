@@ -1,11 +1,10 @@
 package br.com.ufpb.GerenciadorEscolar.config;
 
-import br.com.ufpb.GerenciadorEscolar.security.SecurityFilter;
-import br.com.ufpb.GerenciadorEscolar.service.CustomUserDetailsService;
+import br.com.ufpb.GerenciadorEscolar.security.AuthenticationService;
+import br.com.ufpb.GerenciadorEscolar.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -19,63 +18,54 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import java.util.Arrays;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Configure o encoder de senhas
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthenticationService authenticationService;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationService authenticationService) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.authenticationService = authenticationService;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Configure o serviço de detalhes de usuário
     @Bean
-    public UserDetailsService userDetailsService(CustomUserDetailsService customUserDetailsService) {
-        return customUserDetailsService;
+    public UserDetailsService userDetailsService() {
+        return authenticationService; // Usa a implementação do AuthenticationService
     }
 
-    // Configure o AuthenticationManager usando um provider
     @Bean
-    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setUserDetailsService(authenticationService);
         authProvider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(authProvider);
     }
 
-    // Configure a cadeia de filtros de segurança
     @Bean
-    public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http,
-                                                   SecurityFilter securityFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http) throws Exception {
+        // Define o UserDetailsService no JwtAuthenticationFilter
+        jwtAuthenticationFilter.setUserDetailsService(authenticationService);
+
         return http
-                // Desabilita o CSRF, pois estamos usando JWT e API REST
                 .csrf(csrf -> csrf.disable())
-                // Usa a configuração de CORS definida globalmente (via WebConfig)
                 .cors(Customizer.withDefaults())
-                // Configura o gerenciamento de sessão para STATELESS
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Define as regras de autorização
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
-                        // Permite GET para /turmas/** e /mural/** para ADMINISTRADOR, PROFESSOR e ALUNO
-                        .requestMatchers(HttpMethod.GET, "/turmas/**", "/mural/**").hasAnyRole("ADMINISTRADOR", "PROFESSOR", "ALUNO")
-                        // Exige que apenas professores possam fazer POST em /mural
+                        .requestMatchers("/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/turmas/**", "/mural/**").hasAnyRole("ADMIN", "PROFESSOR", "ALUNO")
                         .requestMatchers(HttpMethod.POST, "/mural/**").hasRole("PROFESSOR")
-                        // Outros endpoints...
                         .anyRequest().authenticated()
                 )
-
-
-
-
-
-
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }
