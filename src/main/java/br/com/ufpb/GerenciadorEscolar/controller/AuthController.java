@@ -80,14 +80,16 @@ public class AuthController {
         );
 
         String token = jwtUtil.generateToken(userDetails);
-
         Object usuarioResponse = converterParaResponse(usuario);
 
+        // 🔥 Adicionando a role explicitamente na resposta
         return ResponseEntity.ok(Map.of(
                 "accessToken", token,
+                "role", usuario.getRole(),  // <-- Adicionando a role aqui!
                 "usuario", usuarioResponse
         ));
     }
+
 
 
     private Optional<Usuario> buscarUsuarioPorEmail(String email) {
