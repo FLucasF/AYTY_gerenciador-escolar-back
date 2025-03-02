@@ -8,12 +8,14 @@ import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.Turma;
 import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class MuralServiceImpl implements MuralServiceInterface {
 
     private final MuralRepository muralRepository;
@@ -29,51 +31,72 @@ public class MuralServiceImpl implements MuralServiceInterface {
 
     @Override
     public MuralResponse criarPostagem(MuralRequest muralRequest) {
+        log.info("Criando postagem no mural para turma ID: {} e professor ID: {}",
+                muralRequest.turmaId(), muralRequest.professorId());
+
         if (muralRequest.professorId() == null) {
+            log.error("O campo professorId é obrigatório para publicar uma postagem.");
             throw new IllegalArgumentException("O campo professorId é obrigatório para publicar uma postagem.");
         }
 
         Mural mural = muralMapper.toEntity(muralRequest);
 
-        // Define o objeto Professor manualmente
         Professor professor = new Professor();
         professor.setId(muralRequest.professorId());
         mural.setProfessor(professor);
+        log.debug("Professor definido para a postagem com ID: {}", muralRequest.professorId());
 
-        // Se necessário, também pode definir o objeto Turma manualmente
         Turma turma = new Turma();
         turma.setId(muralRequest.turmaId());
         mural.setTurma(turma);
+        log.debug("Turma definida para a postagem com ID: {}", muralRequest.turmaId());
 
         mural.setAtivo(true);
 
         try {
             muralRepository.save(mural);
+            log.info("Postagem no mural salva com sucesso. ID da postagem: {}", mural.getId());
         } catch (Exception e) {
+            log.error("Erro ao salvar a postagem no mural: {}", e.getMessage());
             throw new RuntimeException("Erro ao salvar a postagem no mural: " + e.getMessage(), e);
         }
 
-        return muralMapper.toResponse(mural);
+        MuralResponse response = muralMapper.toResponse(mural);
+        log.info("Retornando resposta da postagem: {}", response);
+        return response;
     }
-
-
-
 
     @Override
     public Optional<MuralResponse> buscarPostagemPorId(Long id) {
-        return muralRepository.findById(id).map(muralMapper::toResponse);
+        log.info("Buscando postagem no mural com ID: {}", id);
+        Optional<MuralResponse> response = muralRepository.findById(id).map(muralMapper::toResponse);
+        if (response.isEmpty()) {
+            log.warn("Postagem no mural não encontrada para o ID: {}", id);
+        }
+        return response;
     }
 
     @Override
     public List<MuralResponse> listarPostagensPorTurma(Long idTurma) {
-        return muralRepository.findByTurmaIdAndAtivoTrue(idTurma).stream().map(muralMapper::toResponse).toList();
+        log.info("Listando postagens no mural para a turma com ID: {}", idTurma);
+        List<MuralResponse> responses = muralRepository.findByTurmaIdAndAtivoTrue(idTurma)
+                .stream()
+                .map(muralMapper::toResponse)
+                .toList();
+        log.info("Total de postagens encontradas: {}", responses.size());
+        return responses;
     }
 
     @Override
     public void deletarPostagem(Long id) {
+        log.info("Deletando postagem no mural com ID: {}", id);
         Mural mural = muralRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Postagem não encontrada"));
+                .orElseThrow(() -> {
+                    log.error("Postagem não encontrada para deleção com ID: {}", id);
+                    return new RuntimeException("Postagem não encontrada");
+                });
         mural.setAtivo(false);
         muralRepository.save(mural);
+        log.info("Postagem desativada com sucesso. ID: {}", id);
     }
 }

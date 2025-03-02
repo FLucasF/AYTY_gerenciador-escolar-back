@@ -3,7 +3,9 @@ package br.com.ufpb.GerenciadorEscolar.dto.aluno;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.UniqueElements;
 
 public record AlunoRequest(
         @NotBlank(message = "Campo nome não pode ser vazio")
@@ -20,6 +22,7 @@ public record AlunoRequest(
         String senha,
 
         @NotBlank(message = "Campo CPF não pode ser vazio")
+        @Pattern(regexp = "\\d{11}", message = "O CPF deve conter exatamente 11 dígitos numéricos")
         String cpf,
 
         @NotBlank(message = "Campo curso não pode ser vazio")

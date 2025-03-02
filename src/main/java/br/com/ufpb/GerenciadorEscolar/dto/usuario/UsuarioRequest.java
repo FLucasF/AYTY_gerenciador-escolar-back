@@ -2,6 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.dto.usuario;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UsuarioRequest(
@@ -19,6 +20,7 @@ public record UsuarioRequest(
         String senha,
 
         @NotBlank(message = "Campo CPF não pode ser vazio")
+        @Pattern(regexp = "\\d{11}", message = "O CPF deve conter exatamente 11 dígitos numéricos")
         String cpf,
 
         @NotBlank(message = "Campo role não pode ser vazio (ALUNO, PROFESSOR, ADMINISTRADOR)")

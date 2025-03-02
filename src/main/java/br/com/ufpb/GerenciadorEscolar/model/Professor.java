@@ -1,16 +1,16 @@
 package br.com.ufpb.GerenciadorEscolar.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
 @Table(name = "professores")
 public class Professor extends Usuario {
     private String departamento;
+
+    @Column(unique = true)
     private String siape;
 
     @JsonManagedReference
@@ -19,11 +19,11 @@ public class Professor extends Usuario {
 
     public Professor() {
         super();
-        this.setRole("ROLE_PROFESSOR"); // 🔥 Define a role corretamente
+        this.setRole("ROLE_PROFESSOR");
     }
 
     public Professor(String nome, String email, String senha, String cpf, String departamento, String siape) {
-        super(nome, email, senha, cpf, "ROLE_PROFESSOR"); // 🔥 Role definida ao criar um professor
+        super(nome, email, senha, cpf, "ROLE_PROFESSOR");
         this.departamento = departamento;
         this.siape = siape;
     }

@@ -17,9 +17,6 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    /**
-     * 🔹 Lista todos os usuários (Alunos, Professores e Administradores) de forma paginada corretamente.
-     */
     @GetMapping
     public ResponseEntity<Page<UsuarioResponse>> listarUsuarios(Pageable pageable) {
         return ResponseEntity.ok(usuarioService.listarUsuarios(pageable));

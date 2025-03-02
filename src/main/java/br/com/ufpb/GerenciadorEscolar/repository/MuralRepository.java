@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface MuralRepository extends JpaRepository<Mural, Long> {
+
     List<Mural> findByTurmaIdAndAtivoTrue(Long turmaId);
+
 }

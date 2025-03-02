@@ -72,7 +72,6 @@ public class AuthController {
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
 
-        // Criar UserDetails a partir do Usuario para gerar o token corretamente
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 usuario.getEmail(),
                 usuario.getSenha(),
@@ -82,10 +81,9 @@ public class AuthController {
         String token = jwtUtil.generateToken(userDetails);
         Object usuarioResponse = converterParaResponse(usuario);
 
-        // 🔥 Adicionando a role explicitamente na resposta
         return ResponseEntity.ok(Map.of(
                 "accessToken", token,
-                "role", usuario.getRole(),  // <-- Adicionando a role aqui!
+                "role", usuario.getRole(),
                 "usuario", usuarioResponse
         ));
     }

@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
+
     List<Material> findByTurmaIdAndAtivoTrue(Long turmaId);
+
 }

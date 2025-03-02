@@ -16,11 +16,11 @@ public class Aluno extends Usuario {
 
     public Aluno() {
         super();
-        this.setRole("ROLE_ALUNO"); // 🔥 Define a role corretamente
+        this.setRole("ROLE_ALUNO");
     }
 
     public Aluno(String nome, String email, String senha, String cpf, String curso) {
-        super(nome, email, senha, cpf, "ROLE_ALUNO"); // 🔥 Role definida ao criar um aluno
+        super(nome, email, senha, cpf, "ROLE_ALUNO");
         this.curso = curso;
     }
 

@@ -11,8 +11,10 @@ public record TurmaRequest(
         @Size(min = 3, max = 100, message = "O nome da turma deve ter entre 3 e 100 caracteres")
         String nome,
 
+        @NotBlank(message = "O código da turma é obrigatório")
         String codigo,
 
+        @NotBlank(message = "O semestre da turma é obrigatório")
         String semestre,
 
         @NotNull(message = "O professorId é obrigatório")

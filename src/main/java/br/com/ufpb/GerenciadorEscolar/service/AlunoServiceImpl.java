@@ -5,6 +5,7 @@ import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.AlunoMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class AlunoServiceImpl implements AlunoServiceInterface {
 
     private final AlunoRepository alunoRepository;
@@ -31,47 +33,76 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
     @Override
     public Page<AlunoResponse> listarAlunosAtivos(Pageable pageable) {
-        return alunoRepository.findAllByAtivoTrue(pageable)
+        log.info("Listando alunos ativos com paginação: {}", pageable);
+        Page<AlunoResponse> page = alunoRepository.findAllByAtivoTrue(pageable)
                 .map(alunoMapper::toResponse);
+        log.info("Total de alunos ativos encontrados: {}", page.getTotalElements());
+        return page;
     }
 
     @Override
     public Optional<AlunoResponse> buscarAlunoPorId(Long id) {
-        return alunoRepository.findByIdAndAtivoTrue(id)
+        log.info("Buscando aluno por ID: {}", id);
+        Optional<AlunoResponse> response = alunoRepository.findByIdAndAtivoTrue(id)
                 .map(alunoMapper::toResponse);
+        if (response.isEmpty()) {
+            log.warn("Aluno não encontrado para o ID: {}", id);
+        }
+        return response;
     }
 
     @Override
     public AlunoResponse cadastrarAluno(AlunoRequest alunoRequest) {
+        log.info("Iniciando cadastro de aluno: {}", alunoRequest);
         Aluno aluno = alunoMapper.toEntity(alunoRequest);
         aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
         aluno.setAtivo(true);
-        System.out.println("Role do professor cadastrado: " + aluno.getRole());
-        alunoRepository.save(aluno);
+        try {
+            alunoRepository.save(aluno);
+            log.info("Aluno cadastrado com sucesso. ID: {}", aluno.getId());
+        } catch (Exception e) {
+            log.error("Erro ao cadastrar aluno: {}", e.getMessage());
+            throw new RuntimeException("Erro ao cadastrar aluno: " + e.getMessage(), e);
+        }
         return alunoMapper.toResponse(aluno);
     }
 
     @Override
     public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
+        log.info("Atualizando aluno com ID: {}", id);
         Aluno aluno = alunoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Aluno não encontrado para o ID: {}", id);
+                    return new RuntimeException("Aluno não encontrado");
+                });
         aluno.setNome(alunoRequest.nome());
         aluno.setEmail(alunoRequest.email());
         aluno.setCurso(alunoRequest.curso());
         alunoRepository.save(aluno);
+        log.info("Aluno atualizado com sucesso. ID: {}", aluno.getId());
         return alunoMapper.toResponse(aluno);
     }
 
     @Override
     public void desativarAluno(Long id) {
+        log.info("Desativando aluno com ID: {}", id);
         Aluno aluno = alunoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Aluno não encontrado para desativação. ID: {}", id);
+                    return new RuntimeException("Aluno não encontrado");
+                });
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
+        log.info("Aluno desativado com sucesso. ID: {}", id);
     }
 
     @Override
     public Optional<Aluno> findByEmail(String email) {
-        return alunoRepository.findByEmailAndAtivoTrue(email);
+        log.debug("Buscando aluno por email: {}", email);
+        Optional<Aluno> alunoOpt = alunoRepository.findByEmailAndAtivoTrue(email);
+        if (alunoOpt.isEmpty()) {
+            log.warn("Aluno não encontrado para o email: {}", email);
+        }
+        return alunoOpt;
     }
 }

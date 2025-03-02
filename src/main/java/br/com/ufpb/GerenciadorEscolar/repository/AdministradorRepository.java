@@ -10,13 +10,10 @@ import java.util.Optional;
 
 @Repository
 public interface AdministradorRepository extends JpaRepository<Administrador, Long> {
-
-    // Busca por email apenas entre os administradores ativos
     Optional<Administrador> findByEmailAndAtivoTrue(String email);
 
-    // Retorna todos os administradores ativos com paginação
     Page<Administrador> findAllByAtivoTrue(Pageable pageable);
 
-    // Retorna o administrador ativo com o id informado
     Optional<Administrador> findByIdAndAtivoTrue(Long id);
+
 }

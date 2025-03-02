@@ -8,6 +8,6 @@ import java.util.Optional;
 @Repository
 public interface UserLoginRepository extends JpaRepository<Usuario, Long> {
 
-    // Apenas busca usuários ativos para login
     Optional<Usuario> findByEmailAndAtivoTrue(String email);
+
 }

@@ -11,6 +11,7 @@ import java.util.List;
 public interface TurmaRepository extends JpaRepository<Turma, Long> {
 
     Page<Turma> findByProfessorIdAndAtivoTrue(Long professorId, Pageable pageable);
+
     Page<Turma> findByAlunosIdAndAtivoTrue(Long alunoId, Pageable pageable);
 
 }

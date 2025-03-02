@@ -37,7 +37,7 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return authenticationService; // Usa a implementação do AuthenticationService
+        return authenticationService;
     }
 
     @Bean
@@ -50,7 +50,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http) throws Exception {
-        // Define o UserDetailsService no JwtAuthenticationFilter
         jwtAuthenticationFilter.setUserDetailsService(authenticationService);
 
         return http

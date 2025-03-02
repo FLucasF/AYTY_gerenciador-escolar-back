@@ -16,7 +16,7 @@ public class Material {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nomeArquivo;
-    private String urlArquivo; // Caminho do arquivo no MinIO
+    private String urlArquivo;
 
     @ManyToOne
     @JoinColumn(name = "turma_id", nullable = false)

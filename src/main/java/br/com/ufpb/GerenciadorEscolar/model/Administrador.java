@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -7,15 +8,17 @@ import jakarta.persistence.Table;
 @Table(name = "administradores")
 public class Administrador extends Usuario {
     private String setor;
+
+    @Column(unique = true)
     private String siape;
 
     public Administrador() {
         super();
-        this.setRole("ROLE_ADMIN"); // 🔥 Define a role automaticamente
+        this.setRole("ROLE_ADMIN");
     }
 
     public Administrador(String nome, String email, String senha, String cpf, String setor, String siape) {
-        super(nome, email, senha, cpf, "ROLE_ADMIN"); // 🔥 Role já definida corretamente
+        super(nome, email, senha, cpf, "ROLE_ADMIN");
         this.setor = setor;
         this.siape = siape;
     }

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED) // Garante tabelas separadas para cada tipo de usuário
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Usuario implements Serializable {
 
     @Id
@@ -13,12 +13,18 @@ public abstract class Usuario implements Serializable {
     private Long id;
 
     private String nome;
+
+    @Column(unique = true)
     private String email;
+
     private String senha;
+
+    @Column(unique = true)
     private String cpf;
+
     private boolean ativo = true;
 
-    @Column(nullable = false) // 🔥 Agora cada usuário tem uma role
+    @Column(nullable = false)
     private String role;
 
     public Usuario() {}
