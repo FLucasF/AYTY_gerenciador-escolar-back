@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "materiais")
@@ -17,6 +18,9 @@ public class Material {
     private Long id;
     private String nomeArquivo;
     private String urlArquivo;
+
+    @Column(name = "media_id", nullable = false)
+    private Long mediaId;
 
     @ManyToOne
     @JoinColumn(name = "turma_id", nullable = false)
@@ -74,5 +78,13 @@ public class Material {
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public Long getMediaId() {
+        return mediaId;
+    }
+
+    public void setMediaId(Long mediaId) {
+        this.mediaId = mediaId;
     }
 }

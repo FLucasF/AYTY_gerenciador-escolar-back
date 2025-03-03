@@ -47,17 +47,27 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                 .map(administradorMapper::toResponse);
         if (response.isEmpty()) {
             log.warn("Administrador não encontrado para o ID: {}", id);
-        } else {
-            log.debug("Administrador encontrado: {}", response.get());
         }
         return response;
     }
 
     @Override
     public AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest) {
-        log.info("Iniciando cadastro de administrador com dados: {}", administradorRequest);
+        log.info("Iniciando cadastro de administrador: {}", administradorRequest);
+
+        // ⚠️ Verifica se já existe um administrador ativo com o mesmo e-mail ou CPF
+        if (administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email()).isPresent()) {
+            log.warn("Tentativa de cadastrar administrador com e-mail já existente: {}", administradorRequest.email());
+            throw new RuntimeException("Já existe um administrador ativo cadastrado com esse e-mail.");
+        }
+
+        if (administradorRepository.findByCpfAndAtivoTrue(administradorRequest.cpf()).isPresent()) {
+            log.warn("Tentativa de cadastrar administrador com CPF já existente: {}", administradorRequest.cpf());
+            throw new RuntimeException("Já existe um administrador ativo cadastrado com esse CPF.");
+        }
+
         Administrador admin = administradorMapper.toEntity(administradorRequest);
-        admin.setSenha(passwordEncoder.encode(admin.getSenha()));
+        admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
         admin.setAtivo(true);
 
         try {
@@ -67,25 +77,51 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
             log.error("Erro ao cadastrar administrador: {}", e.getMessage());
             throw new RuntimeException("Erro ao cadastrar administrador: " + e.getMessage(), e);
         }
-        log.debug("Role do administrador cadastrado: {}", admin.getRole());
+
         return administradorMapper.toResponse(admin);
     }
 
     @Override
     public AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest) {
         log.info("Atualizando administrador com ID: {}", id);
-        Administrador admin = administradorRepository.findById(id)
+
+        // ⚠️ Verifica se o administrador está ativo
+        Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
-                    log.error("Administrador não encontrado para o ID: {}", id);
-                    return new RuntimeException("Administrador não encontrado");
+                    log.error("Administrador não encontrado ou inativo para o ID: {}", id);
+                    return new RuntimeException("Administrador não encontrado ou inativo.");
                 });
 
+        // ⚠️ Verifica se o e-mail pertence a outro administrador ativo
+        Optional<Administrador> adminComMesmoEmail = administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email());
+        if (adminComMesmoEmail.isPresent() && !adminComMesmoEmail.get().getId().equals(id)) {
+            log.warn("Tentativa de atualizar administrador com e-mail duplicado: {}", administradorRequest.email());
+            throw new RuntimeException("Já existe outro administrador ativo cadastrado com esse e-mail.");
+        }
+
+        // ⚠️ Verifica se o CPF pertence a outro administrador ativo
+        Optional<Administrador> adminComMesmoCpf = administradorRepository.findByCpfAndAtivoTrue(administradorRequest.cpf());
+        if (adminComMesmoCpf.isPresent() && !adminComMesmoCpf.get().getId().equals(id)) {
+            log.warn("Tentativa de atualizar administrador com CPF duplicado: {}", administradorRequest.cpf());
+            throw new RuntimeException("Já existe outro administrador ativo cadastrado com esse CPF.");
+        }
+
+        // Atualiza os dados
         admin.setNome(administradorRequest.nome());
         admin.setEmail(administradorRequest.email());
+        admin.setCpf(administradorRequest.cpf());
         admin.setSetor(administradorRequest.setor());
+
+        // ⚠️ Se a senha não foi alterada, mantém a senha antiga
+        if (administradorRequest.senha() == null || administradorRequest.senha().trim().isEmpty()) {
+            log.info("Mantendo a senha anterior para o administrador ID: {}", id);
+        } else {
+            admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
+        }
 
         administradorRepository.save(admin);
         log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());
+
         return administradorMapper.toResponse(admin);
     }
 
@@ -97,6 +133,7 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                     log.error("Administrador não encontrado para desativação com ID: {}", id);
                     return new RuntimeException("Administrador não encontrado");
                 });
+
         admin.setAtivo(false);
         administradorRepository.save(admin);
         log.info("Administrador desativado com sucesso. ID: {}", id);

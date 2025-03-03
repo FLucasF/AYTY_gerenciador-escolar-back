@@ -7,12 +7,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/administradores")
+@Validated
 public class AdministradorController {
 
     private final AdministradorServiceInterface administradorService;
@@ -26,6 +28,16 @@ public class AdministradorController {
         AdministradorResponse novoAdmin = administradorService.cadastrarAdministrador(administradorRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoAdmin);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AdministradorResponse> atualizarAdministrador(
+            @PathVariable Long id,
+            @RequestBody AdministradorRequest administradorRequest) {
+
+        AdministradorResponse administradorAtualizado = administradorService.atualizarAdministrador(id, administradorRequest);
+        return ResponseEntity.ok(administradorAtualizado);
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> desativarAdministrador(@PathVariable Long id) {

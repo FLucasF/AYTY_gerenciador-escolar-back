@@ -1,6 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.repository;
 
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,5 +16,8 @@ public interface AdministradorRepository extends JpaRepository<Administrador, Lo
     Page<Administrador> findAllByAtivoTrue(Pageable pageable);
 
     Optional<Administrador> findByIdAndAtivoTrue(Long id);
+
+    Optional<Administrador> findByCpfAndAtivoTrue(String cpf);
+
 
 }

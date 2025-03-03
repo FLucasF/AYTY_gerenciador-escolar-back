@@ -54,28 +54,73 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
     @Override
     public ProfessorResponse cadastrarProfessor(ProfessorRequest professorRequest) {
         log.info("Iniciando cadastro de professor: {}", professorRequest);
+
+        // ⚠️ Verifica se já existe um professor ATIVO com o mesmo e-mail
+        Optional<Professor> professorExistenteEmail = professorRepository.findByEmailAndAtivoTrue(professorRequest.email());
+        if (professorExistenteEmail.isPresent()) {
+            log.warn("Tentativa de cadastrar professor com e-mail já existente: {}", professorRequest.email());
+            throw new RuntimeException("Já existe um professor ativo cadastrado com esse e-mail.");
+        }
+
+        // ⚠️ Verifica se já existe um professor ATIVO com o mesmo CPF
+        Optional<Professor> professorExistenteCpf = professorRepository.findByCpfAndAtivoTrue(professorRequest.cpf());
+        if (professorExistenteCpf.isPresent()) {
+            log.warn("Tentativa de cadastrar professor com CPF já existente: {}", professorRequest.cpf());
+            throw new RuntimeException("Já existe um professor ativo cadastrado com esse CPF.");
+        }
+
         Professor professor = professorMapper.toEntity(professorRequest);
         professor.setSenha(passwordEncoder.encode(professorRequest.senha()));
         professor.setAtivo(true);
+
         professorRepository.save(professor);
-        log.info("Professor cadastrado com sucesso. Role: {}", professor.getRole());
+        log.info("Professor cadastrado com sucesso. ID: {}", professor.getId());
+
         return professorMapper.toResponse(professor);
     }
 
     @Override
     public ProfessorResponse atualizarProfessor(Long id, ProfessorRequest professorRequest) {
         log.info("Atualizando professor com ID: {}", id);
-        Professor professor = professorRepository.findById(id)
+
+        // ⚠️ Verifica se o professor que está sendo atualizado está ATIVO
+        Professor professor = professorRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
-                    log.error("Professor não encontrado para o ID: {}", id);
-                    return new RuntimeException("Professor não encontrado");
+                    log.error("Tentativa de atualizar professor inativo ou inexistente. ID: {}", id);
+                    return new RuntimeException("Professor não encontrado ou inativo.");
                 });
 
+        // ⚠️ Verifica se o e-mail já pertence a outro professor ativo
+        Optional<Professor> professorComMesmoEmail = professorRepository.findByEmailAndAtivoTrue(professorRequest.email());
+        if (professorComMesmoEmail.isPresent() && !professorComMesmoEmail.get().getId().equals(id)) {
+            log.warn("Tentativa de atualizar professor com e-mail duplicado: {}", professorRequest.email());
+            throw new RuntimeException("Já existe outro professor ativo cadastrado com esse e-mail.");
+        }
+
+        // ⚠️ Verifica se o CPF já pertence a outro professor ativo
+        Optional<Professor> professorComMesmoCpf = professorRepository.findByCpfAndAtivoTrue(professorRequest.cpf());
+        if (professorComMesmoCpf.isPresent() && !professorComMesmoCpf.get().getId().equals(id)) {
+            log.warn("Tentativa de atualizar professor com CPF duplicado: {}", professorRequest.cpf());
+            throw new RuntimeException("Já existe outro professor ativo cadastrado com esse CPF.");
+        }
+
+        // Atualizar os dados
         professor.setNome(professorRequest.nome());
         professor.setEmail(professorRequest.email());
         professor.setDepartamento(professorRequest.departamento());
+        professor.setCpf(professorRequest.cpf());
+        professor.setSiape(professorRequest.siape());
+
+        // **Se a senha foi enviada, encode ela. Se não, mantém a senha original**
+        if (professorRequest.senha() != null && !professorRequest.senha().isEmpty()) {
+            professor.setSenha(passwordEncoder.encode(professorRequest.senha()));
+        } else {
+            log.info("🔒 Senha não alterada. Mantendo a original.");
+        }
+
         professorRepository.save(professor);
-        log.info("Professor atualizado com sucesso. ID: {}", professor.getId());
+        log.info("✅ Professor atualizado com sucesso. ID: {}", professor.getId());
+
         return professorMapper.toResponse(professor);
     }
 

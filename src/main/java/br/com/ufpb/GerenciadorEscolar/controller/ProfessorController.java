@@ -3,16 +3,19 @@ package br.com.ufpb.GerenciadorEscolar.controller;
 import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
 import br.com.ufpb.GerenciadorEscolar.service.ProfessorServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/professores")
+@Validated
 public class ProfessorController {
 
     private final ProfessorServiceImpl professorService;

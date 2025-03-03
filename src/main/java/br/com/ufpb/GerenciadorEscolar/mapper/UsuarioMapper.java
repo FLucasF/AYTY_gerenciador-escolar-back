@@ -15,7 +15,11 @@ public interface UsuarioMapper {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getCpf(),
-                getRole(usuario)
+                getRole(usuario),
+
+                usuario instanceof Aluno ? ((Aluno) usuario).getCurso() : null,
+                usuario instanceof Administrador ? ((Administrador) usuario).getSetor() : null,
+                usuario instanceof Professor ? ((Professor) usuario).getDepartamento() : null
         );
     }
 

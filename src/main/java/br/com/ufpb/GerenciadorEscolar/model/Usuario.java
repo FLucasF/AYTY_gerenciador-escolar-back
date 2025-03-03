@@ -14,12 +14,10 @@ public abstract class Usuario implements Serializable {
 
     private String nome;
 
-    @Column(unique = true)
     private String email;
 
     private String senha;
 
-    @Column(unique = true)
     private String cpf;
 
     private boolean ativo = true;

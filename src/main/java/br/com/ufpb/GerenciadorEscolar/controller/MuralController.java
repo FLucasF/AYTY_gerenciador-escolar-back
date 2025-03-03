@@ -5,6 +5,7 @@ import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
 import br.com.ufpb.GerenciadorEscolar.service.MuralServiceInterface;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/mural")
+@Validated
 public class MuralController {
 
     private final MuralServiceInterface muralService;

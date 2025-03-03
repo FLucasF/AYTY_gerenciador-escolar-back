@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.repository;
 
+import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,5 +17,8 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
     Page<Professor> findAllByAtivoTrue(Pageable pageable);
 
     Optional<Professor> findByIdAndAtivoTrue(Long id);
+
+    Optional<Professor> findByCpfAndAtivoTrue(String cpf);
+
 
 }

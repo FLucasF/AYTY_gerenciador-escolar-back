@@ -5,5 +5,8 @@ public record UsuarioResponse(
         String nome,
         String email,
         String cpf,
-        String role
+        String role,
+        String curso,         // Para aluno
+        String setor,         // Para administrador
+        String departamento   // Para professor
 ) {}
