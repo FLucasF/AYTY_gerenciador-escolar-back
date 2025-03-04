@@ -80,7 +80,6 @@ public class AlunoServiceImplFindByEmailTest {
 
     @Test
     public void testFindByEmail_EmailVazio() {
-        // Testa se o método lança exceção quando o e-mail é vazio
         String email = "";
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {

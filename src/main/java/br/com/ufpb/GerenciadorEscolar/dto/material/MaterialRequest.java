@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record MaterialRequest(
         @NotNull(message = "O id da mídia é obrigatório")
-        Long mediaId,  // ✅ Esse ID vem da API de Mídia
+        Long mediaId,
 
         @NotBlank(message = "O nome do arquivo não pode ser vazio")
         String fileName,

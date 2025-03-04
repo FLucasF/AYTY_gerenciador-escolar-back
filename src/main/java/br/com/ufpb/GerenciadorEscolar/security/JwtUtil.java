@@ -1,4 +1,4 @@
-package br.com.ufpb.GerenciadorEscolar.util;
+package br.com.ufpb.GerenciadorEscolar.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
