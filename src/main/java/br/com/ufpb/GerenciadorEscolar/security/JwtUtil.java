@@ -1,91 +1,59 @@
 package br.com.ufpb.GerenciadorEscolar.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Function;
+import java.util.Optional;
 
 @Component
 public class JwtUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+    @Value("${app.token.key}")
+    private String TOKEN_KEY;
 
-    @Value("${jwt.secret}")
-    private String secret;
-
-    @Value("${jwt.expiration}")
-    private long validityInMilliseconds;
-
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    public String generateToken(UserDetails userDetails, String role) {
+        Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+        return JWT.create()
+                .withSubject(userDetails.getUsername())
+                .withClaim("role", role) // Adiciona a role ao token
+                .withExpiresAt(expirationToken())
+                .sign(algorithm);
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    private Instant expirationToken() {
+        return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
-
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    public String generateToken(UserDetails userDetails) {
-        logger.info("🔑 Gerando token para usuário: {}", userDetails.getUsername());
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
-
-        return createToken(claims, userDetails.getUsername());
-    }
-
-    private String createToken(Map<String, Object> claims, String subject) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + validityInMilliseconds);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .setId(UUID.randomUUID().toString())
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Optional<String> extractUsername(String token) {
         try {
-            final String username = extractUsername(token);
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        } catch (Exception e) {
-            logger.error("❌ Erro na validação do token: {}", e.getMessage());
-            return false;
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+            return Optional.ofNullable(JWT.require(algorithm).build().verify(token).getSubject());
+        } catch (JWTVerificationException e) {
+            return Optional.empty();
         }
     }
+
+    public Optional<String> extractRole(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+            return Optional.ofNullable(JWT.require(algorithm).build().verify(token).getClaim("role").asString());
+        } catch (JWTVerificationException e) {
+            return Optional.empty();
+        }
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails) {
+        return extractUsername(token)
+                .map(username -> username.equals(userDetails.getUsername()))
+                .orElse(false);
+    }
+
 }

@@ -1,58 +1,24 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.Usuario;
+import br.com.ufpb.GerenciadorEscolar.security.AuthenticationService;
 import br.com.ufpb.GerenciadorEscolar.security.JwtUtil;
-import br.com.ufpb.GerenciadorEscolar.service.AdministradorServiceInterface;
-import br.com.ufpb.GerenciadorEscolar.service.AlunoServiceInterface;
-import br.com.ufpb.GerenciadorEscolar.service.ProfessorServiceInterface;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
-@Validated
 public class AuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
-    private final AdministradorServiceInterface administradorService;
-    private final ProfessorServiceInterface professorService;
-    private final AlunoServiceInterface alunoService;
+    private final AuthenticationService authenticationService;
     private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(
-            AdministradorServiceInterface administradorService,
-            ProfessorServiceInterface professorService,
-            AlunoServiceInterface alunoService,
-            JwtUtil jwtUtil,
-            AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder) {
-        this.administradorService = administradorService;
-        this.professorService = professorService;
-        this.alunoService = alunoService;
+    public AuthController(AuthenticationService authenticationService, JwtUtil jwtUtil) {
+        this.authenticationService = authenticationService;
         this.jwtUtil = jwtUtil;
-        this.authenticationManager = authenticationManager;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -60,54 +26,22 @@ public class AuthController {
         String email = credentials.get("email");
         String senha = credentials.get("senha");
 
-        Optional<Usuario> usuarioOpt = buscarUsuarioPorEmail(email);
+        // Autenticar usuário e gerar token
+        String token = authenticationService.autenticarUsuario(email, senha, jwtUtil);
 
+        // Buscar o usuário autenticado para obter o ID
+        Optional<Usuario> usuarioOpt = authenticationService.buscarUsuarioPorEmail(email);
         if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(401).body("Usuário não encontrado ou inativo.");
+            return ResponseEntity.status(401).body(Map.of("error", "Usuário não encontrado"));
         }
 
         Usuario usuario = usuarioOpt.get();
 
-        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
-            return ResponseEntity.status(401).body("Senha incorreta.");
-        }
-
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, senha));
-
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                usuario.getEmail(),
-                usuario.getSenha(),
-                List.of(new SimpleGrantedAuthority(usuario.getRole()))
-        );
-
-        String token = jwtUtil.generateToken(userDetails);
-        Object usuarioResponse = converterParaResponse(usuario);
-
         return ResponseEntity.ok(Map.of(
                 "accessToken", token,
-                "role", usuario.getRole(),
-                "usuario", usuarioResponse
+                "role", jwtUtil.extractRole(token).orElse("UNKNOWN"),
+                "email", email,
+                "id", usuario.getId() // Retorna o ID do usuário
         ));
-    }
-
-    private Optional<Usuario> buscarUsuarioPorEmail(String email) {
-        return administradorService.findByEmail(email).map(admin -> (Usuario) admin)
-                .or(() -> professorService.findByEmail(email).map(prof -> (Usuario) prof))
-                .or(() -> alunoService.findByEmail(email).map(aluno -> (Usuario) aluno));
-    }
-
-    private Object converterParaResponse(Usuario usuario) {
-        if (usuario instanceof Administrador admin) {
-            return new AdministradorResponse(
-                    admin.getId(), admin.getNome(), admin.getEmail(), admin.getCpf(), admin.getSetor(), admin.getSiape());
-        } else if (usuario instanceof Professor prof) {
-            return new ProfessorResponse(
-                    prof.getId(), prof.getNome(), prof.getEmail(), prof.getCpf(), prof.getDepartamento(), prof.getSiape());
-        } else if (usuario instanceof Aluno aluno) {
-            return new AlunoResponse(
-                    aluno.getId(), aluno.getNome(), aluno.getEmail(), aluno.getCpf(), aluno.getCurso());
-        } else {
-            throw new IllegalStateException("Tipo de usuário desconhecido.");
-        }
     }
 }
