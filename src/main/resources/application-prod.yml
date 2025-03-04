@@ -1,6 +1,6 @@
 app:
   token:
-    key: "sua_chave_secreta_super_segura"  # Substitua por uma chave secreta real
+    key: "sua_chave_secreta_super_segura"
 
 
 spring:

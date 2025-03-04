@@ -1,40 +1,38 @@
-version: '3.8'
-
 services:
-  mysql:
+  db:
     image: mysql:8.0
-    container_name: mysql_gerenciador_escolar
-    restart: always
+    container_name: mysql_gerenciador
+    command: --default-authentication-plugin=mysql_native_password
     environment:
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: gerenciador_escolar
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 12345
-      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_USER: escola
+      MYSQL_PASSWORD: 123456
     ports:
-      - "3306:3306"
+      - '3306:3306'
     volumes:
       - mysql_data:/var/lib/mysql
-    networks:
-      - gerenciador_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   backend:
     build: .
-    container_name: backend_gerenciador_escolar
-    restart: always
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/gerenciador_escolar?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 12345
-      SERVER_PORT: 8090
+    container_name: gerenciador-backend
     ports:
       - "8090:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/gerenciador_escolar?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: escola
+      SPRING_DATASOURCE_PASSWORD: 123456
+      APP_TOKEN_KEY: "sua_chave_secreta_super_segura"
     depends_on:
-      - mysql
-    networks:
-      - gerenciador_network
-
-networks:
-  gerenciador_network:
+      db:
+        condition: service_healthy
+    restart: on-failure
 
 volumes:
   mysql_data:
