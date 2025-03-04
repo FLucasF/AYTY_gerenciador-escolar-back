@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -43,6 +43,10 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     @Override
     public Optional<AdministradorResponse> buscarAdministradorPorId(Long id) {
         log.info("Buscando administrador por ID: {}", id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("ID não pode ser nulo ou inválido");
+        }
+
         Optional<AdministradorResponse> response = administradorRepository.findByIdAndAtivoTrue(id)
                 .map(administradorMapper::toResponse);
         if (response.isEmpty()) {
@@ -66,6 +70,28 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
             throw new RuntimeException("Já existe um administrador ativo cadastrado com esse CPF.");
         }
 
+        // 🚨 Validação de campos nulos ou vazios diretamente no cadastrarAdministrador
+        // Lista com todos os campos que precisam ser validados e seus respectivos nomes
+        List<Map.Entry<String, String>> campos = Arrays.asList(
+                new AbstractMap.SimpleEntry<>("Nome", administradorRequest.nome()),
+                new AbstractMap.SimpleEntry<>("Email", administradorRequest.email()),
+                new AbstractMap.SimpleEntry<>("CPF", administradorRequest.cpf()),
+                new AbstractMap.SimpleEntry<>("Setor", administradorRequest.setor()),
+                new AbstractMap.SimpleEntry<>("Senha", administradorRequest.senha()),
+                new AbstractMap.SimpleEntry<>("SIAPE", administradorRequest.siape())
+        );
+
+        // Validação dos campos
+        campos.forEach(campo -> {
+            if (campo.getValue() == null) {
+                throw new NullPointerException(campo.getKey() + " não pode ser nulo.");
+            }
+
+            if (campo.getValue().trim().isEmpty()) {
+                throw new IllegalArgumentException(campo.getKey() + " não pode ser vazio.");
+            }
+        });
+
         Administrador admin = administradorMapper.toEntity(administradorRequest);
         admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
         admin.setAtivo(true);
@@ -83,40 +109,41 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
     @Override
     public AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("ID não pode ser nulo ou inválido");
+        }
+
         log.info("Atualizando administrador com ID: {}", id);
 
-        // ⚠️ Verifica se o administrador está ativo
         Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
                     log.error("Administrador não encontrado ou inativo para o ID: {}", id);
                     return new RuntimeException("Administrador não encontrado ou inativo.");
                 });
 
-        // ⚠️ Verifica se o e-mail pertence a outro administrador ativo
-        Optional<Administrador> adminComMesmoEmail = administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email());
-        if (adminComMesmoEmail.isPresent() && !adminComMesmoEmail.get().getId().equals(id)) {
-            log.warn("Tentativa de atualizar administrador com e-mail duplicado: {}", administradorRequest.email());
-            throw new RuntimeException("Já existe outro administrador ativo cadastrado com esse e-mail.");
+        // ✅ Atualiza apenas os campos informados
+        if (administradorRequest.nome() != null) {
+            admin.setNome(administradorRequest.nome());
+        }
+        if (administradorRequest.email() != null) {
+            admin.setEmail(administradorRequest.email());
+        }
+        if (administradorRequest.cpf() != null) {
+            admin.setCpf(administradorRequest.cpf());
+        }
+        if (administradorRequest.setor() != null) {
+            admin.setSetor(administradorRequest.setor());
+        }
+        if (administradorRequest.siape() != null) {
+            admin.setSiape(administradorRequest.siape());
         }
 
-        // ⚠️ Verifica se o CPF pertence a outro administrador ativo
-        Optional<Administrador> adminComMesmoCpf = administradorRepository.findByCpfAndAtivoTrue(administradorRequest.cpf());
-        if (adminComMesmoCpf.isPresent() && !adminComMesmoCpf.get().getId().equals(id)) {
-            log.warn("Tentativa de atualizar administrador com CPF duplicado: {}", administradorRequest.cpf());
-            throw new RuntimeException("Já existe outro administrador ativo cadastrado com esse CPF.");
-        }
-
-        // Atualiza os dados
-        admin.setNome(administradorRequest.nome());
-        admin.setEmail(administradorRequest.email());
-        admin.setCpf(administradorRequest.cpf());
-        admin.setSetor(administradorRequest.setor());
-
-        // ⚠️ Se a senha não foi alterada, mantém a senha antiga
-        if (administradorRequest.senha() == null || administradorRequest.senha().trim().isEmpty()) {
-            log.info("Mantendo a senha anterior para o administrador ID: {}", id);
-        } else {
+        // ✅ Se a senha for informada, atualiza. Caso contrário, mantém a anterior
+        if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
             admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
+            log.info("Senha atualizada para o administrador ID: {}", id);
+        } else {
+            log.info("Nenhuma senha informada. Mantendo a senha antiga para o administrador ID: {}", id);
         }
 
         administradorRepository.save(admin);
@@ -124,6 +151,7 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
         return administradorMapper.toResponse(admin);
     }
+
 
     @Override
     public void desativarAdministrador(Long id) {
@@ -141,11 +169,18 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
     @Override
     public Optional<Administrador> findByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email não pode ser nulo ou vazio");
+        }
+
         log.debug("Buscando administrador por email: {}", email);
         Optional<Administrador> adminOpt = administradorRepository.findByEmailAndAtivoTrue(email);
+
         if (adminOpt.isEmpty()) {
             log.warn("Administrador não encontrado para o email: {}", email);
         }
+
         return adminOpt;
     }
+
 }

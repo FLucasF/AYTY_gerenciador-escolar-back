@@ -15,8 +15,6 @@ public record UsuarioRequest(
         @Email(message = "Email inválido")
         String email,
 
-        @NotBlank(message = "Campo senha não pode ser vazio")
-        @Size(min = 8, max = 20, message = "A senha precisa ter entre 8-20 caracteres")
         String senha,
 
         @NotBlank(message = "Campo CPF não pode ser vazio")

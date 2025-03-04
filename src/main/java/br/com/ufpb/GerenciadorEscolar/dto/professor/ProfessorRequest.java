@@ -16,8 +16,6 @@ public record ProfessorRequest(
         @Email(message = "Email inválido")
         String email,
 
-        @NotBlank(message = "Campo senha não pode ser vazio")
-        @Size(min = 8, max = 20, message = "A senha precisa ter entre 8-20 caracteres")
         String senha,
 
         @Pattern(regexp = "\\d{11}", message = "O CPF deve conter exatamente 11 dígitos numéricos")

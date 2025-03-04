@@ -90,8 +90,6 @@ public class AuthController {
         ));
     }
 
-
-
     private Optional<Usuario> buscarUsuarioPorEmail(String email) {
         return administradorService.findByEmail(email).map(admin -> (Usuario) admin)
                 .or(() -> professorService.findByEmail(email).map(prof -> (Usuario) prof))

@@ -16,8 +16,6 @@ public record AdministradorRequest(
         @Email(message = "Email inválido")
         String email,
 
-        @NotBlank(message = "Campo senha não pode ser vazio")
-        @Size(min = 8, max = 20, message = "A senha precisa ter entre 8-20 caracteres")
         String senha,
 
         @NotBlank(message = "Campo CPF não pode ser vazio")
@@ -25,7 +23,6 @@ public record AdministradorRequest(
         String cpf,
 
         @NotBlank(message = "Campo setor não pode ser vazio")
-        @NotBlank(message = "Campo CPF não pode ser vazio")
         String setor,
 
         @NotBlank(message = "Campo SIAPE não pode ser vazio")

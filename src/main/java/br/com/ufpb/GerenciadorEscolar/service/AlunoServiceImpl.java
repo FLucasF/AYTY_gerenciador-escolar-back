@@ -12,7 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.lang.reflect.Method;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -31,6 +32,31 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         this.alunoMapper = alunoMapper;
     }
 
+    // Método para validar os campos do AlunoRequest
+    private void validarCampos(AlunoRequest alunoRequest) {
+        // Obter todos os métodos get do AlunoRequest
+        Arrays.stream(alunoRequest.getClass().getDeclaredMethods())
+                .filter(method -> method.getName().startsWith("get")) // Pega apenas os métodos 'get'
+                .forEach(method -> {
+                    try {
+                        Object value = method.invoke(alunoRequest); // Obtém o valor do campo
+
+                        log.debug("Validando campo: {}", method.getName().substring(3));
+                        // Verifica se o campo é nulo ou vazio
+                        if (value == null) {
+                            throw new NullPointerException("Campo " + method.getName().substring(3) + " não pode ser nulo.");
+                        }
+
+                        // Se for uma String, verifica se está vazia
+                        if (value instanceof String && ((String) value).trim().isEmpty()) {
+                            throw new IllegalArgumentException("Campo " + method.getName().substring(3) + " não pode ser vazio.");
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException("Erro ao validar o campo: " + method.getName(), e);
+                    }
+                });
+    }
+
     @Override
     public Page<AlunoResponse> listarAlunosAtivos(Pageable pageable) {
         log.info("Listando alunos ativos com paginação: {}", pageable);
@@ -42,14 +68,20 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
     @Override
     public Optional<AlunoResponse> buscarAlunoPorId(Long id) {
+        if (id == null) throw new NullPointerException("ID não pode ser nulo");
+
+        if(id <= 0) throw new IllegalArgumentException("ID não pode ser nulo ou inválido");
+
         log.info("Buscando aluno por ID: {}", id);
         Optional<AlunoResponse> response = alunoRepository.findByIdAndAtivoTrue(id)
                 .map(alunoMapper::toResponse);
+
         if (response.isEmpty()) {
             log.warn("Aluno não encontrado para o ID: {}", id);
         }
         return response;
     }
+
 
     @Override
     public AlunoResponse cadastrarAluno(AlunoRequest alunoRequest) {
@@ -69,6 +101,27 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
             throw new RuntimeException("Já existe um aluno ativo cadastrado com esse CPF.");
         }
 
+        // 🚨 Validação de campos nulos ou vazios diretamente no cadastrarAluno
+// Lista com todos os campos que precisam ser validados e seus respectivos nomes
+        List<Map.Entry<String, String>> campos = Arrays.asList(
+                new AbstractMap.SimpleEntry<>("Nome", alunoRequest.nome()),
+                new AbstractMap.SimpleEntry<>("Email", alunoRequest.email()),
+                new AbstractMap.SimpleEntry<>("CPF", alunoRequest.cpf()),
+                new AbstractMap.SimpleEntry<>("Curso", alunoRequest.curso()),
+                new AbstractMap.SimpleEntry<>("Senha", alunoRequest.senha())
+        );
+
+        campos.forEach(campo -> {
+            if (campo.getValue() == null) {
+                throw new NullPointerException(campo.getKey() + " não pode ser nulo.");
+            }
+
+            if (campo.getValue().trim().isEmpty()) {
+                throw new IllegalArgumentException(campo.getKey() + " não pode ser vazio.");
+            }
+        });
+
+
         Aluno aluno = alunoMapper.toEntity(alunoRequest);
         aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
         aluno.setAtivo(true);
@@ -86,32 +139,53 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
     @Override
     public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
-        log.info("Atualizando aluno com ID: {}", id);
+        log.info("🔄 Iniciando atualização do aluno com ID: {}", id);
 
-        // Buscar aluno ativo
+        if (id == null) {
+            log.error("❌ O ID do aluno não pode ser nulo.");
+            throw new IllegalArgumentException("O ID do aluno não pode ser nulo.");
+        }
+
         Aluno aluno = alunoRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
-                    log.error("Tentativa de atualizar aluno inativo ou inexistente. ID: {}", id);
+                    log.error("❌ Aluno não encontrado ou inativo. ID: {}", id);
                     return new RuntimeException("Aluno não encontrado ou inativo.");
                 });
 
-        // Verificar se o e-mail já pertence a outro aluno ativo
-        Optional<Aluno> alunoComMesmoEmail = alunoRepository.findByEmailAndAtivoTrue(alunoRequest.email());
-        if (alunoComMesmoEmail.isPresent() && !alunoComMesmoEmail.get().getId().equals(id)) {
-            log.warn("Tentativa de atualizar aluno com e-mail duplicado: {}", alunoRequest.email());
-            throw new RuntimeException("Já existe outro aluno ativo cadastrado com esse e-mail.");
+        if (alunoRequest.email() != null && !alunoRequest.email().equals(aluno.getEmail())) {
+            log.info("🔍 Verificando se já existe outro aluno ativo com o e-mail: {}", alunoRequest.email());
+
+            Optional<Aluno> alunoComMesmoEmail = alunoRepository.findByEmailAndAtivoTrue(alunoRequest.email());
+
+            if (alunoComMesmoEmail.isPresent() && !alunoComMesmoEmail.get().getId().equals(id)) {
+                log.warn("❌ Tentativa de atualizar para um e-mail já existente: {}", alunoRequest.email());
+                throw new RuntimeException("Já existe outro aluno ativo cadastrado com esse e-mail.");
+            }
+
+            log.info("📌 Atualizando e-mail: {} → {}", aluno.getEmail(), alunoRequest.email());
+            aluno.setEmail(alunoRequest.email());
         }
 
-        // Atualizar os dados
-        aluno.setNome(alunoRequest.nome());
-        aluno.setEmail(alunoRequest.email());
-        aluno.setCurso(alunoRequest.curso());
+        // Atualiza apenas os campos informados
+        if (alunoRequest.nome() != null) {
+            log.info("📌 Atualizando nome: {} → {}", aluno.getNome(), alunoRequest.nome());
+            aluno.setNome(alunoRequest.nome());
+        }
+        if (alunoRequest.cpf() != null) {
+            log.info("📌 Atualizando CPF: {} → {}", aluno.getCpf(), alunoRequest.cpf());
+            aluno.setCpf(alunoRequest.cpf());
+        }
+        if (alunoRequest.curso() != null) {
+            log.info("📌 Atualizando curso: {} → {}", aluno.getCurso(), alunoRequest.curso());
+            aluno.setCurso(alunoRequest.curso());
+        }
 
-        // **Se a senha foi enviada, encode ela. Se não, mantém a senha original**
-        if (alunoRequest.senha() != null && !alunoRequest.senha().isEmpty()) {
-            aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
+        // 🔒 Atualiza senha apenas se foi enviada e não está vazia, mantendo a senha antiga caso contrário
+        if (alunoRequest.senha() == null || alunoRequest.senha().trim().isEmpty()) {
+            log.info("🔒 Nenhuma senha nova fornecida. Mantendo a senha existente para o aluno ID: {}", id);
         } else {
-            log.info("🔒 Senha não alterada. Mantendo a original.");
+            log.info("🔑 Atualizando senha para o aluno ID: {}", id);
+            aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
         }
 
         alunoRepository.save(aluno);
@@ -119,8 +193,6 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
         return alunoMapper.toResponse(aluno);
     }
-
-
 
     @Override
     public void desativarAluno(Long id) {
