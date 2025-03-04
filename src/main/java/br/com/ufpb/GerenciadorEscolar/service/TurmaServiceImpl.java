@@ -163,6 +163,12 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
                     return new RuntimeException("Aluno não encontrado");
                 });
 
+        // Verificando se a turma atingiu o tamanho máximo
+        if (turma.getAlunos().size() >= turma.getTamanhoMaximo()) {
+            log.warn("A turma com ID: {} já atingiu o tamanho máximo de alunos", turmaId);
+            throw new RuntimeException("A turma já atingiu o tamanho máximo de alunos.");
+        }
+
         if (!turma.getAlunos().contains(aluno)) {
             turma.getAlunos().add(aluno);
             aluno.getTurmas().add(turma);
@@ -251,4 +257,5 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         log.info("Total de turmas encontradas: {}", turmas.getTotalElements());
         return turmas.map(turmaMapper::toResponse);
     }
+
 }

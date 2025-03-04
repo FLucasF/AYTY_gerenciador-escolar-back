@@ -1,71 +1,90 @@
 package br.com.ufpb.GerenciadorEscolar.security;
 
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.model.Usuario;
-import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
-import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
-import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
+import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-public class AuthenticationService implements UserDetailsService {
+public class AuthenticationService {
 
-    private final AdministradorRepository administradorRepository;
-    private final ProfessorRepository professorRepository;
-    private final AlunoRepository alunoRepository;
+    private final UserLoginRepository userLoginRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
-    public AuthenticationService(
-            AdministradorRepository administradorRepository,
-            ProfessorRepository professorRepository,
-            AlunoRepository alunoRepository,
-            PasswordEncoder passwordEncoder) {
-        this.administradorRepository = administradorRepository;
-        this.professorRepository = professorRepository;
-        this.alunoRepository = alunoRepository;
+    @Autowired
+    public AuthenticationService(UserLoginRepository userLoginRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+        this.userLoginRepository = userLoginRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<Usuario> usuario = buscarUsuarioPorEmail(email);
+    // Método para autenticar o usuário e gerar o token JWT
+    public String loginUsuario(String email, String senha) {
+        logger.debug("Tentando autenticar o usuário com email: {}", email);
 
-        if (usuario.isEmpty()) {
-            throw new UsernameNotFoundException("Usuário não encontrado: " + email);
-        }
+        UserLogin userLogin = userLoginRepository.findByEmailAndAtivoTrue(email)
+                .orElseThrow(() -> {
+                    logger.warn("Usuário não encontrado ou inativo para o email: {}", email);
+                    return new UsernameNotFoundException("Credenciais inválidas!");
+                });
 
-        return new User(
-                usuario.get().getEmail(),
-                usuario.get().getSenha(),
-                List.of(() -> usuario.get().getRole()) // Define a role corretamente
-        );
-    }
+        logger.debug("Usuário encontrado: {}", userLogin.getEmail());
 
-    public Optional<Usuario> buscarUsuarioPorEmail(String email) {
-        return administradorRepository.findByEmailAndAtivoTrue(email).map(admin -> (Usuario) admin)
-                .or(() -> professorRepository.findByEmailAndAtivoTrue(email).map(prof -> (Usuario) prof))
-                .or(() -> alunoRepository.findByEmailAndAtivoTrue(email).map(aluno -> (Usuario) aluno));
-    }
-
-
-    public String autenticarUsuario(String email, String senha, JwtUtil jwtUtil) {
-        Optional<Usuario> usuario = buscarUsuarioPorEmail(email);
-
-        if (usuario.isEmpty() || !passwordEncoder.matches(senha, usuario.get().getSenha())) {
+        // Verifica se a senha fornecida corresponde ao hash da senha no banco
+        if (!passwordEncoder.matches(senha, userLogin.getSenha())) {
+            logger.warn("Senha inválida para o usuário: {}", email);
             throw new UsernameNotFoundException("Credenciais inválidas!");
         }
 
-        UserDetails userDetails = loadUserByUsername(email);
-        return jwtUtil.generateToken(userDetails, usuario.get().getRole());
+        // Gera o token JWT
+        String token = jwtUtil.generateToken(loadUserByUsername(email), userLogin.getUsuario().getRole());
+        logger.debug("Token JWT gerado com sucesso para o usuário: {}", email);
+
+        return token;
+    }
+
+    // Método para carregar o UserDetails (detalhes do usuário) a partir do email
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        logger.debug("Carregando detalhes do usuário para o email: {}", email);
+
+        UserLogin userLogin = userLoginRepository.findByEmailAndAtivoTrue(email)
+                .orElseThrow(() -> {
+                    logger.warn("Usuário não encontrado ou inativo para o email: {}", email);
+                    return new UsernameNotFoundException("Usuário não encontrado ou inativo: " + email);
+                });
+
+        // Obtém o Usuario associado ao login
+        Usuario usuario = userLogin.getUsuario();
+        logger.debug("Usuário carregado: {} com role: {}", usuario.getEmail(), usuario.getRole());
+
+        return new User(
+                userLogin.getEmail(),
+                userLogin.getSenha(),
+                List.of(usuario::getRole) // A role é definida a partir do Usuario
+        );
+    }
+
+    // Método para buscar o Usuario diretamente
+    public Usuario buscarUsuarioPorEmail(String email) {
+        logger.debug("Buscando usuário diretamente pelo email: {}", email);
+
+        UserLogin userLogin = userLoginRepository.findByEmailAndAtivoTrue(email)
+                .orElseThrow(() -> {
+                    logger.warn("Usuário não encontrado ou inativo para o email: {}", email);
+                    return new UsernameNotFoundException("Usuário não encontrado ou inativo: " + email);
+                });
+
+        return userLogin.getUsuario();  // Retorna o Usuario associado ao login
     }
 }

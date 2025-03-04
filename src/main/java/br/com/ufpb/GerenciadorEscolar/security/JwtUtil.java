@@ -23,13 +23,23 @@ public class JwtUtil {
         Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
         return JWT.create()
                 .withSubject(userDetails.getUsername())
-                .withClaim("role", role) // Adiciona a role ao token
+                .withClaim("role", role)
                 .withExpiresAt(expirationToken())
                 .sign(algorithm);
     }
 
     private Instant expirationToken() {
         return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
+    }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+            Date expiration = JWT.require(algorithm).build().verify(token).getExpiresAt();
+            return expiration != null && expiration.before(new Date());
+        } catch (JWTVerificationException e) {
+            return true; // Considera token inválido se não puder verificar
+        }
     }
 
     public Optional<String> extractUsername(String token) {
@@ -52,8 +62,7 @@ public class JwtUtil {
 
     public boolean validateToken(String token, UserDetails userDetails) {
         return extractUsername(token)
-                .map(username -> username.equals(userDetails.getUsername()))
+                .map(username -> username.equals(userDetails.getUsername()) && !isTokenExpired(token))
                 .orElse(false);
     }
-
 }

@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar;
 
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
+import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
+import br.com.ufpb.GerenciadorEscolar.service.AdministradorServiceImpl;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,27 +16,30 @@ public class GerenciadorEscolarApplication {
 	}
 
 	@Bean
-	public CommandLineRunner loadAdmin(AdministradorRepository administradorRepository, PasswordEncoder passwordEncoder) {
+	public CommandLineRunner loadAdmin(AdministradorServiceImpl administradorService, PasswordEncoder passwordEncoder) {
 		return args -> {
-			administradorRepository.findByEmailAndAtivoTrue("admin@dominio.com")
-					.ifPresentOrElse(
-							admin -> System.out.println("Admin já existe."),
-							() -> {
-								Administrador admin = new Administrador();
-								admin.setNome("Administrador");
-								admin.setEmail("admin@dominio.com");
-								// Criptografa a senha antes de salvar
-								admin.setSenha(passwordEncoder.encode("admin123"));
-								admin.setCpf("00000000000"); // Exemplo de CPF
-								admin.setSetor("TI");
-								admin.setSiape("123456");  // Exemplo de siape
-								administradorRepository.save(admin);
-								System.out.println("Admin criado com sucesso." + admin.getRole());
-							}
-					);
-			// Imprime todos os administradores cadastrados
-			System.out.println("Conteúdo da tabela Administradores:");
-			administradorRepository.findAll().forEach(System.out::println);
+			// Verifica se o administrador já existe antes de criar um novo
+			if (administradorService.findByEmail("admin@dominio.com").isEmpty()) {
+				// Cria o AdministradorRequest com os dados necessários
+				AdministradorRequest adminRequest = new AdministradorRequest(
+						"Administrador", // Nome
+						"admin@dominio.com", // Email
+						"admin123", // Senha
+						"00000000000", // CPF
+						"TI", // Setor
+						"123456" // SIAPE
+				);
+
+				try {
+					// Chama o método para cadastrar o administrador
+					administradorService.cadastrarAdministrador(adminRequest);
+					System.out.println("✔️ Admin criado com sucesso.");
+				} catch (RuntimeException e) {
+					System.out.println("❌ Erro ao criar o admin: " + e.getMessage());
+				}
+			} else {
+				System.out.println("⚠️ O administrador já existe.");
+			}
 		};
 	}
 }

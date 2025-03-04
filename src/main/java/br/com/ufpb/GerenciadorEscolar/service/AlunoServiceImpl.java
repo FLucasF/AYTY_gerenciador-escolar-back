@@ -4,7 +4,9 @@ import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.AlunoMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
+import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
+import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,14 +24,17 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
     private final AlunoRepository alunoRepository;
     private final PasswordEncoder passwordEncoder;
     private final AlunoMapper alunoMapper;
+    private final UserLoginRepository userLoginRepository;
 
     @Autowired
     public AlunoServiceImpl(AlunoRepository alunoRepository,
                             PasswordEncoder passwordEncoder,
-                            AlunoMapper alunoMapper) {
+                            AlunoMapper alunoMapper,
+                            UserLoginRepository userLoginRepository) {
         this.alunoRepository = alunoRepository;
         this.passwordEncoder = passwordEncoder;
         this.alunoMapper = alunoMapper;
+        this.userLoginRepository = userLoginRepository;
     }
 
     // Método para validar os campos do AlunoRequest
@@ -102,7 +107,6 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         }
 
         // 🚨 Validação de campos nulos ou vazios diretamente no cadastrarAluno
-// Lista com todos os campos que precisam ser validados e seus respectivos nomes
         List<Map.Entry<String, String>> campos = Arrays.asList(
                 new AbstractMap.SimpleEntry<>("Nome", alunoRequest.nome()),
                 new AbstractMap.SimpleEntry<>("Email", alunoRequest.email()),
@@ -121,7 +125,6 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
             }
         });
 
-
         Aluno aluno = alunoMapper.toEntity(alunoRequest);
         aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
         aluno.setAtivo(true);
@@ -129,6 +132,13 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         try {
             alunoRepository.save(aluno);
             log.info("✅ Aluno cadastrado com sucesso. ID: {}", aluno.getId());
+
+            // Agora cria o UserLogin associado ao Aluno
+            UserLogin userLogin = new UserLogin(alunoRequest.email(), alunoRequest.senha(), aluno);
+            userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha())); // Codifica a senha
+            userLoginRepository.save(userLogin);  // Salva o login do aluno
+
+            log.info("Aluno e Login cadastrados com sucesso. ID: {}", aluno.getId());
         } catch (Exception e) {
             log.error("❌ Erro ao cadastrar aluno: {}", e.getMessage());
             throw new RuntimeException("Erro ao cadastrar aluno: " + e.getMessage(), e);
@@ -136,6 +146,7 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
         return alunoMapper.toResponse(aluno);
     }
+
 
     @Override
     public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
@@ -180,19 +191,38 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
             aluno.setCurso(alunoRequest.curso());
         }
 
-        // 🔒 Atualiza senha apenas se foi enviada e não está vazia, mantendo a senha antiga caso contrário
-        if (alunoRequest.senha() == null || alunoRequest.senha().trim().isEmpty()) {
-            log.info("🔒 Nenhuma senha nova fornecida. Mantendo a senha existente para o aluno ID: {}", id);
-        } else {
-            log.info("🔑 Atualizando senha para o aluno ID: {}", id);
-            aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
+        // ✅ Atualiza e-mail no administrador e no UserLogin
+        if (alunoRequest.email() != null && !alunoRequest.email().equals(aluno.getEmail())) {
+            aluno.setEmail(alunoRequest.email());
+
+            // Atualizar o e-mail no UserLogin
+            UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
+                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
+            userLogin.setEmail(alunoRequest.email()); // Atualizando o e-mail no UserLogin
+            userLoginRepository.save(userLogin); // Salvando a atualização do login
         }
+
+        // ✅ Atualiza a senha no administrador e no UserLogin
+        if (alunoRequest.senha() != null && !alunoRequest.senha().trim().isEmpty()) {
+            aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
+            log.info("Senha atualizada para o administrador ID: {}", id);
+
+            // Atualizar a senha no UserLogin
+            UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
+                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
+            userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha())); // Codificando a nova senha
+            userLoginRepository.save(userLogin); // Salvando a atualização da senha
+        } else {
+            log.info("Nenhuma senha informada. Mantendo a senha antiga para o administrador ID: {}", id);
+        }
+
 
         alunoRepository.save(aluno);
         log.info("✅ Aluno atualizado com sucesso. ID: {}", aluno.getId());
 
         return alunoMapper.toResponse(aluno);
     }
+
 
     @Override
     public void desativarAluno(Long id) {

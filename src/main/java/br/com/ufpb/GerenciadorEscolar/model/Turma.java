@@ -31,6 +31,7 @@ public class Turma {
 
     private boolean ativo = true;
 
+    private static final int TAMANHO_MAXIMO = 10;
 
     public Long getId() {
         return id;
@@ -76,15 +77,15 @@ public class Turma {
         return alunos;
     }
 
-    public void setAlunos(List<Aluno> alunos) {
-        this.alunos = alunos;
-    }
-
     public boolean isAtivo() {
         return ativo;
     }
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public int getTamanhoMaximo() {
+        return TAMANHO_MAXIMO;
     }
 }

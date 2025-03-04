@@ -10,6 +10,8 @@ import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -19,13 +21,11 @@ import java.util.Optional;
 public class MuralServiceImpl implements MuralServiceInterface {
 
     private final MuralRepository muralRepository;
-    private final TurmaRepository turmaRepository;
     private final MuralMapper muralMapper;
 
     @Autowired
     public MuralServiceImpl(MuralRepository muralRepository, TurmaRepository turmaRepository, MuralMapper muralMapper) {
         this.muralRepository = muralRepository;
-        this.turmaRepository = turmaRepository;
         this.muralMapper = muralMapper;
     }
 
@@ -77,13 +77,14 @@ public class MuralServiceImpl implements MuralServiceInterface {
     }
 
     @Override
-    public List<MuralResponse> listarPostagensPorTurma(Long idTurma) {
-        log.info("Listando postagens no mural para a turma com ID: {}", idTurma);
-        List<MuralResponse> responses = muralRepository.findByTurmaIdAndAtivoTrue(idTurma)
-                .stream()
-                .map(muralMapper::toResponse)
-                .toList();
-        log.info("Total de postagens encontradas: {}", responses.size());
+    public Page<MuralResponse> listarPostagensPorTurma(Long idTurma, Pageable pageable) {
+        log.info("📥 Listando postagens para a turma ID: {} com paginação: {}", idTurma, pageable);
+
+        Page<MuralResponse> responses = muralRepository
+                .findByTurmaIdAndAtivoTrue(idTurma, pageable)
+                .map(muralMapper::toResponse);
+
+        log.info("✅ Total de postagens encontradas: {}", responses.getTotalElements());
         return responses;
     }
 

@@ -4,7 +4,9 @@ import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.AdministradorMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
+import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,14 +23,17 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     private final AdministradorRepository administradorRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdministradorMapper administradorMapper;
+    private final UserLoginRepository userLoginRepository;
 
     @Autowired
     public AdministradorServiceImpl(AdministradorRepository administradorRepository,
                                     PasswordEncoder passwordEncoder,
-                                    AdministradorMapper administradorMapper) {
+                                    AdministradorMapper administradorMapper,
+                                    UserLoginRepository userLoginRepository) {
         this.administradorRepository = administradorRepository;
         this.passwordEncoder = passwordEncoder;
         this.administradorMapper = administradorMapper;
+        this.userLoginRepository = userLoginRepository;
     }
 
     @Override
@@ -54,6 +59,7 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         }
         return response;
     }
+
 
     @Override
     public AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest) {
@@ -94,11 +100,19 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
         Administrador admin = administradorMapper.toEntity(administradorRequest);
         admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
-        admin.setAtivo(true);
 
         try {
-            administradorRepository.save(admin);
+            administradorRepository.save(admin); // Salva o Administrador no banco de dados
             log.info("Administrador cadastrado com sucesso. ID: {}", admin.getId());
+
+            // Agora cria o UserLogin associado ao Administrador
+            UserLogin userLogin = new UserLogin(administradorRequest.email(), administradorRequest.senha(), admin);
+            userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));  // Codifica a senha
+            userLoginRepository.save(userLogin);  // Salva o login do administrador
+
+            log.info("Administrador e Login cadastrados com sucesso. ID: {}", admin.getId());
+
+            log.info("Administrador e Login cadastrados com sucesso. ID: {}", admin.getId());
         } catch (Exception e) {
             log.error("Erro ao cadastrar administrador: {}", e.getMessage());
             throw new RuntimeException("Erro ao cadastrar administrador: " + e.getMessage(), e);
@@ -125,9 +139,6 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         if (administradorRequest.nome() != null) {
             admin.setNome(administradorRequest.nome());
         }
-        if (administradorRequest.email() != null) {
-            admin.setEmail(administradorRequest.email());
-        }
         if (administradorRequest.cpf() != null) {
             admin.setCpf(administradorRequest.cpf());
         }
@@ -138,19 +149,38 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
             admin.setSiape(administradorRequest.siape());
         }
 
-        // ✅ Se a senha for informada, atualiza. Caso contrário, mantém a anterior
+        // ✅ Atualiza e-mail no administrador e no UserLogin
+        if (administradorRequest.email() != null && !administradorRequest.email().equals(admin.getEmail())) {
+            admin.setEmail(administradorRequest.email());
+
+            // Atualizar o e-mail no UserLogin
+            UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
+                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
+            userLogin.setEmail(administradorRequest.email()); // Atualizando o e-mail no UserLogin
+            userLoginRepository.save(userLogin); // Salvando a atualização do login
+        }
+
+        // ✅ Atualiza a senha no administrador e no UserLogin
         if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
             admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
             log.info("Senha atualizada para o administrador ID: {}", id);
+
+            // Atualizar a senha no UserLogin
+            UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
+                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
+            userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha())); // Codificando a nova senha
+            userLoginRepository.save(userLogin); // Salvando a atualização da senha
         } else {
             log.info("Nenhuma senha informada. Mantendo a senha antiga para o administrador ID: {}", id);
         }
 
-        administradorRepository.save(admin);
+        administradorRepository.save(admin); // Salva o Administrador com as atualizações
         log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());
 
-        return administradorMapper.toResponse(admin);
+        return administradorMapper.toResponse(admin); // Retorna a resposta do administrador
     }
+
+
 
 
     @Override

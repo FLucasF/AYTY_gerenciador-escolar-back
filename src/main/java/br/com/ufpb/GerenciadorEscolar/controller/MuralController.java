@@ -3,6 +3,8 @@ package br.com.ufpb.GerenciadorEscolar.controller;
 import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
 import br.com.ufpb.GerenciadorEscolar.service.MuralServiceInterface;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -35,8 +37,9 @@ public class MuralController {
     }
 
     @GetMapping("/turma/{idTurma}")
-    public ResponseEntity<List<MuralResponse>> listarPostagensPorTurma(@PathVariable Long idTurma) {
-        return ResponseEntity.ok(muralService.listarPostagensPorTurma(idTurma));
+    public Page<MuralResponse> listarPostagensPorTurma(
+            @PathVariable Long idTurma, Pageable pageable) {
+        return muralService.listarPostagensPorTurma(idTurma, pageable);
     }
 
     @DeleteMapping("/{id}")
