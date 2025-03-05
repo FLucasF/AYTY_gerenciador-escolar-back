@@ -29,7 +29,6 @@ public class AuthenticationService {
         this.jwtUtil = jwtUtil;
     }
 
-    // Método para autenticar o usuário e gerar o token JWT
     public String loginUsuario(String email, String senha) {
         logger.debug("Tentando autenticar o usuário com email: {}", email);
 
@@ -41,13 +40,11 @@ public class AuthenticationService {
 
         logger.debug("Usuário encontrado: {}", userLogin.getEmail());
 
-        // Verifica se a senha fornecida corresponde ao hash da senha no banco
         if (!passwordEncoder.matches(senha, userLogin.getSenha())) {
             logger.warn("Senha inválida para o usuário: {}", email);
             throw new UsernameNotFoundException("Credenciais inválidas!");
         }
 
-        // Gera o token JWT
         String token = jwtUtil.generateToken(loadUserByUsername(email), userLogin.getUsuario().getRole());
         logger.debug("Token JWT gerado com sucesso para o usuário: {}", email);
 
@@ -64,14 +61,13 @@ public class AuthenticationService {
                     return new UsernameNotFoundException("Usuário não encontrado ou inativo: " + email);
                 });
 
-        // Obtém o Usuario associado ao login
         Usuario usuario = userLogin.getUsuario();
         logger.debug("Usuário carregado: {} com role: {}", usuario.getEmail(), usuario.getRole());
 
         return new User(
                 userLogin.getEmail(),
                 userLogin.getSenha(),
-                List.of(usuario::getRole) // A role é definida a partir do Usuario
+                List.of(usuario::getRole)
         );
     }
 
@@ -85,6 +81,6 @@ public class AuthenticationService {
                     return new UsernameNotFoundException("Usuário não encontrado ou inativo: " + email);
                 });
 
-        return userLogin.getUsuario();  // Retorna o Usuario associado ao login
+        return userLogin.getUsuario();
     }
 }

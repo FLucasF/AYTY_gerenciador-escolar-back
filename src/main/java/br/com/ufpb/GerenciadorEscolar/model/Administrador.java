@@ -9,7 +9,6 @@ import jakarta.persistence.Table;
 public class Administrador extends Usuario {
     private String setor;
 
-    @Column(unique = true)
     private String siape;
 
     public Administrador() {

@@ -9,7 +9,7 @@ services:
       MYSQL_USER: escola
       MYSQL_PASSWORD: 123456
     ports:
-      - '3306:3306'
+      - '3307:3306'
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -33,6 +33,3 @@ services:
       db:
         condition: service_healthy
     restart: on-failure
-
-volumes:
-  mysql_data:

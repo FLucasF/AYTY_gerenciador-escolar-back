@@ -78,13 +78,13 @@ public class MuralServiceImpl implements MuralServiceInterface {
 
     @Override
     public Page<MuralResponse> listarPostagensPorTurma(Long idTurma, Pageable pageable) {
-        log.info("📥 Listando postagens para a turma ID: {} com paginação: {}", idTurma, pageable);
+        log.info("Listando postagens para a turma ID: {} com paginação: {}", idTurma, pageable);
 
         Page<MuralResponse> responses = muralRepository
                 .findByTurmaIdAndAtivoTrue(idTurma, pageable)
                 .map(muralMapper::toResponse);
 
-        log.info("✅ Total de postagens encontradas: {}", responses.getTotalElements());
+        log.info("Total de postagens encontradas: {}", responses.getTotalElements());
         return responses;
     }
 

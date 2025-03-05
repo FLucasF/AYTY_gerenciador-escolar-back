@@ -10,7 +10,6 @@ import java.util.List;
 public class Professor extends Usuario {
     private String departamento;
 
-    @Column(unique = true)
     private String siape;
 
     @JsonManagedReference

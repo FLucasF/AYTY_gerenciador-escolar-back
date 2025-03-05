@@ -65,7 +65,6 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     public AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest) {
         log.info("Iniciando cadastro de administrador: {}", administradorRequest);
 
-        // ⚠️ Verifica se já existe um administrador ativo com o mesmo e-mail ou CPF
         if (administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email()).isPresent()) {
             log.warn("Tentativa de cadastrar administrador com e-mail já existente: {}", administradorRequest.email());
             throw new RuntimeException("Já existe um administrador ativo cadastrado com esse e-mail.");
@@ -76,8 +75,6 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
             throw new RuntimeException("Já existe um administrador ativo cadastrado com esse CPF.");
         }
 
-        // 🚨 Validação de campos nulos ou vazios diretamente no cadastrarAdministrador
-        // Lista com todos os campos que precisam ser validados e seus respectivos nomes
         List<Map.Entry<String, String>> campos = Arrays.asList(
                 new AbstractMap.SimpleEntry<>("Nome", administradorRequest.nome()),
                 new AbstractMap.SimpleEntry<>("Email", administradorRequest.email()),
@@ -87,7 +84,6 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                 new AbstractMap.SimpleEntry<>("SIAPE", administradorRequest.siape())
         );
 
-        // Validação dos campos
         campos.forEach(campo -> {
             if (campo.getValue() == null) {
                 throw new NullPointerException(campo.getKey() + " não pode ser nulo.");
@@ -102,13 +98,12 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
 
         try {
-            administradorRepository.save(admin); // Salva o Administrador no banco de dados
+            administradorRepository.save(admin);
             log.info("Administrador cadastrado com sucesso. ID: {}", admin.getId());
 
-            // Agora cria o UserLogin associado ao Administrador
             UserLogin userLogin = new UserLogin(administradorRequest.email(), administradorRequest.senha(), admin);
-            userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));  // Codifica a senha
-            userLoginRepository.save(userLogin);  // Salva o login do administrador
+            userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
+            userLoginRepository.save(userLogin);
 
             log.info("Administrador e Login cadastrados com sucesso. ID: {}", admin.getId());
 
@@ -149,23 +144,19 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
             admin.setSiape(administradorRequest.siape());
         }
 
-        // ✅ Atualiza e-mail no administrador e no UserLogin
         if (administradorRequest.email() != null && !administradorRequest.email().equals(admin.getEmail())) {
             admin.setEmail(administradorRequest.email());
 
-            // Atualizar o e-mail no UserLogin
             UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
                     .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
             userLogin.setEmail(administradorRequest.email()); // Atualizando o e-mail no UserLogin
             userLoginRepository.save(userLogin); // Salvando a atualização do login
         }
 
-        // ✅ Atualiza a senha no administrador e no UserLogin
         if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
             admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
             log.info("Senha atualizada para o administrador ID: {}", id);
 
-            // Atualizar a senha no UserLogin
             UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
                     .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
             userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha())); // Codificando a nova senha
@@ -174,10 +165,10 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
             log.info("Nenhuma senha informada. Mantendo a senha antiga para o administrador ID: {}", id);
         }
 
-        administradorRepository.save(admin); // Salva o Administrador com as atualizações
+        administradorRepository.save(admin);
         log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());
 
-        return administradorMapper.toResponse(admin); // Retorna a resposta do administrador
+        return administradorMapper.toResponse(admin);
     }
 
 
@@ -191,6 +182,15 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                     log.error("Administrador não encontrado para desativação com ID: {}", id);
                     return new RuntimeException("Administrador não encontrado");
                 });
+
+        UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
+                .orElseThrow(() -> {
+                    log.warn("Nenhum login encontrado para o usuário ID: {}", id);
+                    return new RuntimeException("Login não encontrado");
+                });
+
+        userLogin.setAtivo(false);
+        userLoginRepository.save(userLogin);
 
         admin.setAtivo(false);
         administradorRepository.save(admin);

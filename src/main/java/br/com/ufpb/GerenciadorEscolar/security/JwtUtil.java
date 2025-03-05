@@ -38,7 +38,7 @@ public class JwtUtil {
             Date expiration = JWT.require(algorithm).build().verify(token).getExpiresAt();
             return expiration != null && expiration.before(new Date());
         } catch (JWTVerificationException e) {
-            return true; // Considera token inválido se não puder verificar
+            return true;
         }
     }
 

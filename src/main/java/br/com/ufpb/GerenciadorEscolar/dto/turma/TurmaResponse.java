@@ -6,5 +6,5 @@ public record TurmaResponse(
         String nome,
         String codigo,
         String semestre,
-        Long professorId  // ✅ Certifique-se de que o campo está aqui
+        Long professorId
 ) {}

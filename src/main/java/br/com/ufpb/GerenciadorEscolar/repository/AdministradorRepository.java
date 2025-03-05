@@ -19,5 +19,4 @@ public interface AdministradorRepository extends JpaRepository<Administrador, Lo
 
     Optional<Administrador> findByCpfAndAtivoTrue(String cpf);
 
-
 }

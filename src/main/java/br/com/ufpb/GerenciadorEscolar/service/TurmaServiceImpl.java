@@ -18,8 +18,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -48,6 +47,21 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     public TurmaResponse criarTurma(TurmaRequest turmaRequest) {
         log.info("Recebendo requisição para criar turma: {}", turmaRequest);
 
+        List<Map.Entry<String, String>> campos = Arrays.asList(
+                new AbstractMap.SimpleEntry<>("Nome", turmaRequest.nome()),
+                new AbstractMap.SimpleEntry<>("Código", turmaRequest.codigo()),
+                new AbstractMap.SimpleEntry<>("Semestre", turmaRequest.semestre())
+        );
+
+        campos.forEach(campo -> {
+            if (campo.getValue() == null) {
+                throw new NullPointerException("O campo " + campo.getKey() + " não pode ser nulo.");
+            }
+            if (campo.getValue().trim().isEmpty()) {
+                throw new IllegalArgumentException("O campo " + campo.getKey() + " não pode ser vazio.");
+            }
+        });
+
         Turma turma = turmaMapper.toEntity(turmaRequest);
 
         if (turmaRequest.professorId() != null) {
@@ -58,22 +72,15 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
                         return new RuntimeException("Professor não encontrado");
                     });
             turma.setProfessor(professor);
-            log.info("Professor associado: {}", professor.getNome());
-        } else {
-            log.warn("Nenhum professor atribuído para a turma: {}", turmaRequest);
+            log.info("Professor associado à turma: {}", professor.getNome());
         }
 
-        turma = turmaRepository.saveAndFlush(turma);
+        turma = turmaRepository.save(turma);
         log.debug("Turma salva com ID: {}", turma.getId());
 
-        TurmaResponse response = new TurmaResponse(
-                turma.getId(),
-                turma.getNome(),
-                turma.getCodigo(),
-                turma.getSemestre(),
-                turma.getProfessor() != null ? turma.getProfessor().getId() : null
-        );
+        TurmaResponse response = turmaMapper.toResponse(turma);
         log.info("Retornando resposta da turma: {}", response);
+
         return response;
     }
 
@@ -163,7 +170,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
                     return new RuntimeException("Aluno não encontrado");
                 });
 
-        // Verificando se a turma atingiu o tamanho máximo
         if (turma.getAlunos().size() >= turma.getTamanhoMaximo()) {
             log.warn("A turma com ID: {} já atingiu o tamanho máximo de alunos", turmaId);
             throw new RuntimeException("A turma já atingiu o tamanho máximo de alunos.");

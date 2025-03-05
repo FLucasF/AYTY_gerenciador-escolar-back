@@ -37,31 +37,6 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         this.userLoginRepository = userLoginRepository;
     }
 
-    // Método para validar os campos do AlunoRequest
-    private void validarCampos(AlunoRequest alunoRequest) {
-        // Obter todos os métodos get do AlunoRequest
-        Arrays.stream(alunoRequest.getClass().getDeclaredMethods())
-                .filter(method -> method.getName().startsWith("get")) // Pega apenas os métodos 'get'
-                .forEach(method -> {
-                    try {
-                        Object value = method.invoke(alunoRequest); // Obtém o valor do campo
-
-                        log.debug("Validando campo: {}", method.getName().substring(3));
-                        // Verifica se o campo é nulo ou vazio
-                        if (value == null) {
-                            throw new NullPointerException("Campo " + method.getName().substring(3) + " não pode ser nulo.");
-                        }
-
-                        // Se for uma String, verifica se está vazia
-                        if (value instanceof String && ((String) value).trim().isEmpty()) {
-                            throw new IllegalArgumentException("Campo " + method.getName().substring(3) + " não pode ser vazio.");
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException("Erro ao validar o campo: " + method.getName(), e);
-                    }
-                });
-    }
-
     @Override
     public Page<AlunoResponse> listarAlunosAtivos(Pageable pageable) {
         log.info("Listando alunos ativos com paginação: {}", pageable);
@@ -90,23 +65,21 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
     @Override
     public AlunoResponse cadastrarAluno(AlunoRequest alunoRequest) {
-        log.info("🔍 Verificando se já existe aluno ativo com o e-mail {} ou CPF {}", alunoRequest.email(), alunoRequest.cpf());
+        log.info("Verificando se já existe aluno ativo com o e-mail {} ou CPF {}", alunoRequest.email(), alunoRequest.cpf());
 
-        // ⚠️ Verifica se já existe um aluno ATIVO com esse e-mail ou CPF
         Optional<Aluno> alunoComMesmoEmail = alunoRepository.findByEmailAndAtivoTrue(alunoRequest.email());
         Optional<Aluno> alunoComMesmoCpf = alunoRepository.findByCpfAndAtivoTrue(alunoRequest.cpf());
 
         if (alunoComMesmoEmail.isPresent()) {
-            log.warn("❌ Tentativa de cadastrar aluno com e-mail duplicado: {}", alunoRequest.email());
+            log.warn("Tentativa de cadastrar aluno com e-mail duplicado: {}", alunoRequest.email());
             throw new RuntimeException("Já existe um aluno ativo cadastrado com esse e-mail.");
         }
 
         if (alunoComMesmoCpf.isPresent()) {
-            log.warn("❌ Tentativa de cadastrar aluno com CPF duplicado: {}", alunoRequest.cpf());
+            log.warn("Tentativa de cadastrar aluno com CPF duplicado: {}", alunoRequest.cpf());
             throw new RuntimeException("Já existe um aluno ativo cadastrado com esse CPF.");
         }
 
-        // 🚨 Validação de campos nulos ou vazios diretamente no cadastrarAluno
         List<Map.Entry<String, String>> campos = Arrays.asList(
                 new AbstractMap.SimpleEntry<>("Nome", alunoRequest.nome()),
                 new AbstractMap.SimpleEntry<>("Email", alunoRequest.email()),
@@ -131,16 +104,15 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
         try {
             alunoRepository.save(aluno);
-            log.info("✅ Aluno cadastrado com sucesso. ID: {}", aluno.getId());
+            log.info("Aluno cadastrado com sucesso. ID: {}", aluno.getId());
 
-            // Agora cria o UserLogin associado ao Aluno
             UserLogin userLogin = new UserLogin(alunoRequest.email(), alunoRequest.senha(), aluno);
             userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha())); // Codifica a senha
             userLoginRepository.save(userLogin);  // Salva o login do aluno
 
             log.info("Aluno e Login cadastrados com sucesso. ID: {}", aluno.getId());
         } catch (Exception e) {
-            log.error("❌ Erro ao cadastrar aluno: {}", e.getMessage());
+            log.error("Erro ao cadastrar aluno: {}", e.getMessage());
             throw new RuntimeException("Erro ao cadastrar aluno: " + e.getMessage(), e);
         }
 
@@ -150,10 +122,10 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
     @Override
     public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
-        log.info("🔄 Iniciando atualização do aluno com ID: {}", id);
+        log.info("Iniciando atualização do aluno com ID: {}", id);
 
         if (id == null) {
-            log.error("❌ O ID do aluno não pode ser nulo.");
+            log.error("O ID do aluno não pode ser nulo.");
             throw new IllegalArgumentException("O ID do aluno não pode ser nulo.");
         }
 
@@ -163,86 +135,98 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
                     return new RuntimeException("Aluno não encontrado ou inativo.");
                 });
 
+        if (alunoRequest.nome() != null) {
+            log.info("Atualizando nome: {} → {}", aluno.getNome(), alunoRequest.nome());
+            aluno.setNome(alunoRequest.nome());
+        }
+        if (alunoRequest.cpf() != null) {
+            log.info("Atualizando CPF: {} → {}", aluno.getCpf(), alunoRequest.cpf());
+            aluno.setCpf(alunoRequest.cpf());
+        }
+        if (alunoRequest.curso() != null) {
+            log.info("Atualizando curso: {} → {}", aluno.getCurso(), alunoRequest.curso());
+            aluno.setCurso(alunoRequest.curso());
+        }
+
         if (alunoRequest.email() != null && !alunoRequest.email().equals(aluno.getEmail())) {
-            log.info("🔍 Verificando se já existe outro aluno ativo com o e-mail: {}", alunoRequest.email());
+            log.info("Verificando se já existe outro aluno ativo com o e-mail: {}", alunoRequest.email());
 
             Optional<Aluno> alunoComMesmoEmail = alunoRepository.findByEmailAndAtivoTrue(alunoRequest.email());
 
             if (alunoComMesmoEmail.isPresent() && !alunoComMesmoEmail.get().getId().equals(id)) {
-                log.warn("❌ Tentativa de atualizar para um e-mail já existente: {}", alunoRequest.email());
+                log.warn("Tentativa de atualizar para um e-mail já existente: {}", alunoRequest.email());
                 throw new RuntimeException("Já existe outro aluno ativo cadastrado com esse e-mail.");
             }
 
-            log.info("📌 Atualizando e-mail: {} → {}", aluno.getEmail(), alunoRequest.email());
-            aluno.setEmail(alunoRequest.email());
-        }
-
-        // Atualiza apenas os campos informados
-        if (alunoRequest.nome() != null) {
-            log.info("📌 Atualizando nome: {} → {}", aluno.getNome(), alunoRequest.nome());
-            aluno.setNome(alunoRequest.nome());
-        }
-        if (alunoRequest.cpf() != null) {
-            log.info("📌 Atualizando CPF: {} → {}", aluno.getCpf(), alunoRequest.cpf());
-            aluno.setCpf(alunoRequest.cpf());
-        }
-        if (alunoRequest.curso() != null) {
-            log.info("📌 Atualizando curso: {} → {}", aluno.getCurso(), alunoRequest.curso());
-            aluno.setCurso(alunoRequest.curso());
-        }
-
-        // ✅ Atualiza e-mail no administrador e no UserLogin
-        if (alunoRequest.email() != null && !alunoRequest.email().equals(aluno.getEmail())) {
+            log.info("Atualizando e-mail: {} → {}", aluno.getEmail(), alunoRequest.email());
             aluno.setEmail(alunoRequest.email());
 
-            // Atualizar o e-mail no UserLogin
             UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
-                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
-            userLogin.setEmail(alunoRequest.email()); // Atualizando o e-mail no UserLogin
-            userLoginRepository.save(userLogin); // Salvando a atualização do login
+                    .orElseThrow(() -> {
+                        log.error("Login não encontrado para o aluno ID: {}", id);
+                        return new RuntimeException("Login não encontrado para o Aluno");
+                    });
+
+            userLogin.setEmail(alunoRequest.email());
+            userLoginRepository.save(userLogin);
+            log.info("E-mail atualizado no UserLogin para o aluno ID: {}", id);
         }
 
-        // ✅ Atualiza a senha no administrador e no UserLogin
         if (alunoRequest.senha() != null && !alunoRequest.senha().trim().isEmpty()) {
-            aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
-            log.info("Senha atualizada para o administrador ID: {}", id);
+            String novaSenhaCriptografada = passwordEncoder.encode(alunoRequest.senha());
 
-            // Atualizar a senha no UserLogin
+            log.info("Atualizando senha para o aluno ID: {}", id);
+            aluno.setSenha(novaSenhaCriptografada);
+
             UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
-                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
-            userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha())); // Codificando a nova senha
-            userLoginRepository.save(userLogin); // Salvando a atualização da senha
-        } else {
-            log.info("Nenhuma senha informada. Mantendo a senha antiga para o administrador ID: {}", id);
-        }
+                    .orElseThrow(() -> {
+                        log.error("❌ Login não encontrado para atualização de senha do aluno ID: {}", id);
+                        return new RuntimeException("Login não encontrado para o Aluno");
+                    });
 
+            userLogin.setSenha(novaSenhaCriptografada);
+            log.info("nova senha: {}", novaSenhaCriptografada);
+            userLoginRepository.save(userLogin);
+            log.info("Senha atualizada no UserLogin para o aluno ID: {}", id);
+        } else {
+            log.info("Nenhuma nova senha fornecida. Mantendo a senha existente para o aluno ID: {}", id);
+        }
 
         alunoRepository.save(aluno);
-        log.info("✅ Aluno atualizado com sucesso. ID: {}", aluno.getId());
+        log.info("Aluno atualizado com sucesso. ID: {}", aluno.getId());
 
         return alunoMapper.toResponse(aluno);
     }
 
-
     @Override
     public void desativarAluno(Long id) {
-        log.info("🔴 Desativando aluno com ID: {}", id);
+        log.info("Desativando aluno com ID: {}", id);
         Aluno aluno = alunoRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("❌ Aluno não encontrado para desativação. ID: {}", id);
+                    log.error("Aluno não encontrado para desativação. ID: {}", id);
                     return new RuntimeException("Aluno não encontrado");
                 });
+
+        UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
+                .orElseThrow(() -> {
+                    log.warn("Nenhum login encontrado para o aluno ID: {}", id);
+                    return new RuntimeException("Login não encontrado");
+                });
+
+        userLogin.setAtivo(false);
+        userLoginRepository.save(userLogin);
+
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
-        log.info("✅ Aluno desativado com sucesso. ID: {}", id);
+        log.info("Aluno desativado com sucesso. ID: {}", id);
     }
 
     @Override
     public Optional<Aluno> findByEmail(String email) {
-        log.debug("🔍 Buscando aluno por email: {}", email);
+        log.debug("Buscando aluno por email: {}", email);
         Optional<Aluno> alunoOpt = alunoRepository.findByEmailAndAtivoTrue(email);
         if (alunoOpt.isEmpty()) {
-            log.warn("⚠️ Aluno não encontrado para o email: {}", email);
+            log.warn("Aluno não encontrado para o email: {}", email);
         }
         return alunoOpt;
     }

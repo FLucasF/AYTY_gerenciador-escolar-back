@@ -1,7 +1,6 @@
 app:
   token:
-    key: "sua_chave_secreta_super_segura"
-
+    key: ${JWT_KEY:"sua_chave_secreta_super_segura"}
 
 spring:
   datasource:
@@ -15,7 +14,6 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-
 
 server:
   port: ${SERVER_PORT:8090}

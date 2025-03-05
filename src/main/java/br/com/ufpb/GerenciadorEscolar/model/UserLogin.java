@@ -15,7 +15,7 @@ public class UserLogin {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
-    private Usuario usuario;  // Relacionamento com o usuário real (Aluno, Professor, ou Administrador)
+    private Usuario usuario;
 
     public UserLogin() {}
 
@@ -24,8 +24,6 @@ public class UserLogin {
         this.senha = senha;
         this.usuario = usuario;
     }
-
-    // Getters e Setters
 
     public Long getId() {
         return id;
