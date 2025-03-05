@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar;
 
+import br.com.ufpb.GerenciadorEscolar.service.NenhumaAlteracaoRealizadaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,6 +9,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NenhumaAlteracaoRealizadaException.class)
+    public ResponseEntity<String> handleNenhumaAlteracaoRealizada(NenhumaAlteracaoRealizadaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 
     // Captura erros de validação (como @NotNull ou @NotBlank)
     @ExceptionHandler(MethodArgumentNotValidException.class)

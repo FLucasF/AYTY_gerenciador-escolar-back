@@ -77,6 +77,10 @@ public class Turma {
         return alunos;
     }
 
+    public void setAlunos(List<Aluno> alunos) {
+        this.alunos = alunos;
+    }
+
     public boolean isAtivo() {
         return ativo;
     }

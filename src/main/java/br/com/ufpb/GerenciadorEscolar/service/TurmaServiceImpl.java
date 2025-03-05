@@ -129,17 +129,40 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public Optional<TurmaResponse> buscarTurmaPorId(Long id) {
-        log.info("Buscando turma por ID: {}", id);
-        Optional<TurmaResponse> turmaResponse = turmaRepository.findById(id).map(turmaMapper::toResponse);
-        if (turmaResponse.isEmpty()) {
-            log.warn("Turma não encontrada para o ID: {}", id);
+        if (id == null) {
+            throw new IllegalArgumentException("ID da turma não pode ser nulo");
         }
-        return turmaResponse;
+        if (id < 0) {
+            throw new IllegalArgumentException("ID da turma não pode ser negativo");
+        }
+
+        log.info("Buscando turma por ID: {}", id);
+        Optional<Turma> turma = turmaRepository.findById(id);
+
+        if (turma.isEmpty()) {
+            log.warn("Turma não encontrada para o ID: {}", id);
+            return Optional.empty();
+        }
+
+        return Optional.of(turmaMapper.toResponse(turma.get()));
     }
+
+
+
+
 
     @Override
     public void deletarTurma(Long id) {
         log.info("Deletando turma com ID: {}", id);
+
+        if (id == null) {
+            throw new IllegalArgumentException("ID da turma não pode ser nulo");
+        }
+
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID da turma não pode ser negativo");
+        }
+
         Turma turma = turmaRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Turma não encontrada para deleção com ID: {}", id);
@@ -155,9 +178,21 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         log.info("Turma deletada com sucesso. ID: {}", id);
     }
 
+
     @Override
     public TurmaResponse matricularAluno(Long turmaId, Long alunoId) {
         log.info("Matriculando aluno com ID: {} na turma com ID: {}", alunoId, turmaId);
+
+        if (turmaId == null || alunoId == null) {
+            log.error("Erro: Id não pode ser nulo.");
+            throw new NullPointerException("ID não pode ser nulo");
+        }
+
+        if (turmaId < 0 || alunoId < 0) {
+            log.error("Erro: Id não pode ser negativo.");
+            throw new IllegalArgumentException("ID não pode ser negativo");
+        }
+
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> {
                     log.error("Turma não encontrada para matrícula com ID: {}", turmaId);
@@ -169,6 +204,14 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
                     log.error("Aluno não encontrado para matrícula com ID: {}", alunoId);
                     return new RuntimeException("Aluno não encontrado");
                 });
+
+        //VERIFICAR SE É ASSIM MESMO
+        if (turma.getAlunos() == null) {
+            turma.setAlunos(new ArrayList<>());
+        }
+        if (aluno.getTurmas() == null) {
+            aluno.setTurmas(new ArrayList<>());
+        }
 
         if (turma.getAlunos().size() >= turma.getTamanhoMaximo()) {
             log.warn("A turma com ID: {} já atingiu o tamanho máximo de alunos", turmaId);
@@ -183,6 +226,7 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         } else {
             log.debug("Aluno já estava matriculado na turma. Aluno ID: {}", alunoId);
         }
+
         return turmaMapper.toResponse(turma);
     }
 

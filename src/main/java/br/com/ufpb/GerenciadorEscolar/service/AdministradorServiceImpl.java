@@ -4,6 +4,7 @@ import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.AdministradorMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
@@ -15,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
@@ -118,6 +121,8 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
     @Override
     public AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest) {
+        log.info(administradorRequest.toString());
+
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("ID não pode ser nulo ou inválido");
         }
@@ -130,46 +135,61 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                     return new RuntimeException("Administrador não encontrado ou inativo.");
                 });
 
-        // ✅ Atualiza apenas os campos informados
-        if (administradorRequest.nome() != null) {
+        UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
+                .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
+
+        boolean dadosAlterados = false;
+
+        if (!administradorRequest.nome().equals(admin.getNome())) {
             admin.setNome(administradorRequest.nome());
+            dadosAlterados = true;
         }
-        if (administradorRequest.cpf() != null) {
+
+        if (!administradorRequest.cpf().equals(admin.getCpf())) {
             admin.setCpf(administradorRequest.cpf());
+            dadosAlterados = true;
         }
-        if (administradorRequest.setor() != null) {
+
+        if (!administradorRequest.setor().equals(admin.getSetor())) {
             admin.setSetor(administradorRequest.setor());
+            dadosAlterados = true;
         }
-        if (administradorRequest.siape() != null) {
+
+        if (!administradorRequest.siape().equals(admin.getSiape())) {
             admin.setSiape(administradorRequest.siape());
+            dadosAlterados = true;
         }
 
-        if (administradorRequest.email() != null && !administradorRequest.email().equals(admin.getEmail())) {
+        if (!administradorRequest.email().equals(admin.getEmail())) {
             admin.setEmail(administradorRequest.email());
-
-            UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
-                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
-            userLogin.setEmail(administradorRequest.email()); // Atualizando o e-mail no UserLogin
-            userLoginRepository.save(userLogin); // Salvando a atualização do login
+            userLogin.setEmail(administradorRequest.email());
+            dadosAlterados = true;
         }
 
         if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
-            admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
-            log.info("Senha atualizada para o administrador ID: {}", id);
+            String novaSenhaCriptografada = passwordEncoder.encode(administradorRequest.senha());
+            if (!novaSenhaCriptografada.equals(admin.getSenha())) {
+                admin.setSenha(novaSenhaCriptografada);
+                userLogin.setSenha(novaSenhaCriptografada);
+                dadosAlterados = true;
+                log.info("Senha atualizada para o administrador ID: {}", id);
+            } else {
+                log.info("Senha informada é igual à senha atual. Nenhuma alteração realizada.");
+                throw new NenhumaAlteracaoRealizadaException();
+            }
+        }
 
-            UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
-                    .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
-            userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha())); // Codificando a nova senha
-            userLoginRepository.save(userLogin); // Salvando a atualização da senha
-        } else {
-            log.info("Nenhuma senha informada. Mantendo a senha antiga para o administrador ID: {}", id);
+        if (!dadosAlterados) {
+            throw new NenhumaAlteracaoRealizadaException();
         }
 
         administradorRepository.save(admin);
-        log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());
+        userLoginRepository.save(userLogin);
 
+        log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());
         return administradorMapper.toResponse(admin);
     }
+
 
 
 
@@ -177,25 +197,31 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     @Override
     public void desativarAdministrador(Long id) {
         log.info("Desativando administrador com ID: {}", id);
+
         Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
                     log.error("Administrador não encontrado para desativação com ID: {}", id);
                     return new RuntimeException("Administrador não encontrado");
                 });
 
-        UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
-                .orElseThrow(() -> {
-                    log.warn("Nenhum login encontrado para o usuário ID: {}", id);
-                    return new RuntimeException("Login não encontrado");
-                });
+        // Desativa o login caso exista e esteja ativo
+        userLoginRepository.findByUsuarioAndAtivoTrue(admin).ifPresent(userLogin -> {
+            if (userLogin.isAtivo()) {
+                userLogin.setAtivo(false);
+                userLoginRepository.save(userLogin);
+                log.info("Login do administrador desativado com sucesso. ID: {}", id);
+            } else {
+                log.info("Login do administrador já estava inativo. Nenhuma alteração necessária. ID: {}", id);
+            }
+        });
 
-        userLogin.setAtivo(false);
-        userLoginRepository.save(userLogin);
-
+        // Desativar o administrador
         admin.setAtivo(false);
         administradorRepository.save(admin);
         log.info("Administrador desativado com sucesso. ID: {}", id);
     }
+
+
 
     @Override
     public Optional<Administrador> findByEmail(String email) {
