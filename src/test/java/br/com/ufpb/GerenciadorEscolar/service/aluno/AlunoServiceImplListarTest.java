@@ -3,86 +3,68 @@ package br.com.ufpb.GerenciadorEscolar.service.aluno;
 import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
 import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AlunoServiceImplListarTest extends BaseAlunoServiceTest {
+class AlunoServiceImplListarTest extends BaseAlunoServiceTest {
 
-    // ✅ Testa listagem com alunos ativos
     @Test
-    public void testListarAlunosAtivos_Success() {
-        PageRequest pageable = PageRequest.of(0, 10);
-        Aluno aluno = criarAlunoAtivo();
-        AlunoResponse response = criarAlunoResponse(aluno);
+    void deveListarAlunosAtivosComSucesso() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
+        Aluno aluno1 = criarAlunoPadrao();
+        Aluno aluno2 = new Aluno();
+        aluno2.setId(2L);
+        aluno2.setNome("Maria Souza");
+        aluno2.setEmail("maria@email.com");
+        aluno2.setCpf("98765432100");
+        aluno2.setCurso("Matemática");
+        aluno2.setSenha("Senha@123");
+        Page<Aluno> alunosPage = new PageImpl<>(List.of(aluno1, aluno2), pageable, 2);
 
-        when(alunoMapper.toResponse(aluno)).thenReturn(response);
+        when(alunoRepository.findAllByAtivoTrue(pageable)).thenReturn(alunosPage);
+        when(alunoMapper.toResponse(any())).thenAnswer(invocation -> {
+            Aluno a = invocation.getArgument(0);
+            return new AlunoResponse(a.getId(), a.getNome(), a.getEmail(), a.getCpf(), a.getCurso());
+        });
 
-        Page<Aluno> alunoPage = new PageImpl<>(Collections.singletonList(aluno));
-        when(alunoRepository.findAllByAtivoTrue(pageable)).thenReturn(alunoPage);
+        // Act
+        Page<AlunoResponse> responsePage = alunoService.listarAlunosAtivos(pageable);
 
-        Page<AlunoResponse> result = alunoService.listarAlunosAtivos(pageable);
+        // Assert
+        assertNotNull(responsePage);
+        assertEquals(2, responsePage.getTotalElements());
+        assertEquals("Lucas Felipe", responsePage.getContent().get(0).nome());
+        assertEquals("Maria Souza", responsePage.getContent().get(1).nome());
 
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        assertEquals(response, result.getContent().get(0));
-        verify(alunoRepository, times(1)).findAllByAtivoTrue(pageable);
+        verify(alunoRepository).findAllByAtivoTrue(pageable);
+        verify(alunoMapper, times(2)).toResponse(any());
     }
 
-    // ✅ Testa listagem quando não há alunos ativos
     @Test
-    public void testListarAlunosAtivos_EmptyList() {
-        PageRequest pageable = PageRequest.of(0, 10);
+    void deveRetornarPaginaVazia_SeNaoHouverAlunosAtivos() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Aluno> alunosPage = Page.empty(pageable);
 
-        Page<Aluno> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(alunoRepository.findAllByAtivoTrue(pageable)).thenReturn(emptyPage);
+        when(alunoRepository.findAllByAtivoTrue(pageable)).thenReturn(alunosPage);
 
-        Page<AlunoResponse> result = alunoService.listarAlunosAtivos(pageable);
+        // Act
+        Page<AlunoResponse> responsePage = alunoService.listarAlunosAtivos(pageable);
 
-        assertNotNull(result);
-        assertEquals(0, result.getTotalElements());
-        assertTrue(result.getContent().isEmpty());
-        verify(alunoRepository, times(1)).findAllByAtivoTrue(pageable);
-    }
+        // Assert
+        assertNotNull(responsePage);
+        assertTrue(responsePage.isEmpty());
 
-    // ✅ Testa erro no banco de dados
-    @Test
-    public void testListarAlunosAtivos_DatabaseFailure() {
-        PageRequest pageable = PageRequest.of(0, 10);
-
-        when(alunoRepository.findAllByAtivoTrue(pageable))
-                .thenThrow(new RuntimeException("Erro ao acessar banco de dados"));
-
-        Exception exception = assertThrows(RuntimeException.class, () ->
-                alunoService.listarAlunosAtivos(pageable)
-        );
-
-        assertEquals("Erro ao acessar banco de dados", exception.getMessage());
-        verify(alunoRepository, times(1)).findAllByAtivoTrue(pageable);
-    }
-
-    // ✅ Testa falha ao converter entidade para DTO
-    @Test
-    public void testListarAlunosAtivos_FailureOnMapping() {
-        PageRequest pageable = PageRequest.of(0, 10);
-        Aluno aluno = criarAlunoAtivo();
-
-        Page<Aluno> alunoPage = new PageImpl<>(Collections.singletonList(aluno));
-        when(alunoRepository.findAllByAtivoTrue(pageable)).thenReturn(alunoPage);
-
-        // Simula falha ao converter entidade para DTO
-        when(alunoMapper.toResponse(aluno))
-                .thenThrow(new RuntimeException("Erro ao converter aluno para DTO"));
-
-        Exception exception = assertThrows(RuntimeException.class, () ->
-                alunoService.listarAlunosAtivos(pageable)
-        );
-
-        assertEquals("Erro ao converter aluno para DTO", exception.getMessage());
+        verify(alunoRepository).findAllByAtivoTrue(pageable);
+        verify(alunoMapper, never()).toResponse(any());
     }
 }

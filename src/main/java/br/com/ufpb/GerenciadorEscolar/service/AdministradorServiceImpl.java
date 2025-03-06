@@ -121,6 +121,10 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         }
 
         if (!administradorRequest.email().equals(admin.getEmail())) {
+            if (administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email()).isPresent()) {
+                throw new EmailJaCadastradoException("Já existe outro aluno ativo cadastrado com esse e-mail.");
+            }
+
             admin.setEmail(administradorRequest.email());
             userLogin.setEmail(administradorRequest.email());
             dadosAlterados = true;

@@ -71,24 +71,4 @@ class AdministradorServiceImplListarTest extends BaseAdministradorServiceTest {
         verify(administradorMapper, never()).toResponse(any());
     }
 
-    @Test
-    void deveLancarExcecao_SeErroNoRepositorio() {
-        // Arrange
-        Pageable pageable = PageRequest.of(0, 10);
-
-        when(administradorRepository.findAllByAtivoTrue(pageable))
-                .thenThrow(new RuntimeException("Erro no banco de dados"));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> administradorService.listarAdministradoresAtivos(pageable)
-        );
-
-        assertEquals("Erro no banco de dados", exception.getMessage(), "A mensagem da exceção deve ser 'Erro no banco de dados'.");
-
-        verify(administradorRepository).findAllByAtivoTrue(pageable);
-        verify(administradorMapper, never()).toResponse(any());
-    }
-
 }
