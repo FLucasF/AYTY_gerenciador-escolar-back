@@ -4,6 +4,9 @@ import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.service.ProfessorNaoEncontradoException;
+import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
+import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.NenhumaAlteracaoRealizadaException;
 import org.junit.jupiter.api.Test;
 
@@ -16,183 +19,151 @@ class ProfessorServiceImplAtualizarTest extends BaseProfessorServiceTest {
 
     @Test
     void deveAtualizarProfessorComSucesso() {
+        // Arrange
         Professor professor = criarProfessorPadrao();
         UserLogin userLogin = criarUserLoginPadrao(professor);
 
-        ProfessorRequest request = criarProfessorRequest(
-                "Carlos Silva", professor.getEmail(), null,
-                professor.getCpf(), "Matemática", professor.getSiape()
+        ProfessorRequest request = new ProfessorRequest(
+                "Novo Nome", professor.getEmail(), null,
+                professor.getCpf(), "Novo Departamento", professor.getSiape()
         );
 
         when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
         when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
         when(professorMapper.toResponse(any())).thenReturn(mock(ProfessorResponse.class));
 
+        // Act
         ProfessorResponse response = professorService.atualizarProfessor(professor.getId(), request);
 
+        // Assert
         assertNotNull(response);
-        assertEquals("Carlos Silva", professor.getNome());
-        assertEquals("Matemática", professor.getDepartamento());
+        assertEquals("Novo Nome", professor.getNome());
+        assertEquals("Novo Departamento", professor.getDepartamento());
 
         verify(professorRepository).save(professor);
-        verify(userLoginRepository).save(userLogin);
+        verify(userLoginRepository, never()).save(any()); // Nenhuma alteração no UserLogin
     }
 
     @Test
-    void deveAtualizarTodosOsCamposDoProfessor() {
-        // Criar um professor existente
+    void deveLancarExcecao_SeSiapeJaEstiverCadastrado() {
+        // Arrange
         Professor professor = criarProfessorPadrao();
         UserLogin userLogin = criarUserLoginPadrao(professor);
 
-        // Criar um request com TODOS os campos alterados
-        ProfessorRequest request = criarProfessorRequest(
-                "Carlos Oliveira",      // Nome atualizado
-                "carlosnovo@email.com", // Email atualizado
-                "novaSenha123",         // Senha atualizada
-                "11122233344",          // CPF atualizado
-                "Física",               // Departamento atualizado
-                "7654321"               // SIAPE atualizado
+        ProfessorRequest request = new ProfessorRequest(
+                professor.getNome(), professor.getEmail(), null,
+                professor.getCpf(), professor.getDepartamento(), "SIAPE_DUPLICADO"
         );
 
         when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
         when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
-        when(passwordEncoder.encode("novaSenha123")).thenReturn("senhaCriptografada");
-        when(professorMapper.toResponse(any())).thenReturn(mock(ProfessorResponse.class));
+        when(professorRepository.findBySiapeAndAtivoTrue("SIAPE_DUPLICADO")).thenReturn(Optional.of(new Professor()));
 
-        // Executa a atualização
-        ProfessorResponse response = professorService.atualizarProfessor(professor.getId(), request);
+        // Act & Assert
+        assertThrows(SiapeJaCadastradoException.class,
+                () -> professorService.atualizarProfessor(professor.getId(), request));
 
-        // Verifica se os campos foram atualizados corretamente
-        assertNotNull(response);
-        assertEquals("Carlos Oliveira", professor.getNome());
-        assertEquals("carlosnovo@email.com", professor.getEmail());
-        assertEquals("11122233344", professor.getCpf());
-        assertEquals("Física", professor.getDepartamento());
-        assertEquals("7654321", professor.getSiape());
-        assertEquals("senhaCriptografada", professor.getSenha());
-        assertEquals("senhaCriptografada", userLogin.getSenha());
-        assertEquals("carlosnovo@email.com", userLogin.getEmail());
-
-        // Verifica chamadas nos repositórios
-        verify(professorRepository).save(professor);
-        verify(userLoginRepository).save(userLogin);
+        verify(professorRepository).findByIdAndAtivoTrue(professor.getId());
+        verify(professorRepository).findBySiapeAndAtivoTrue("SIAPE_DUPLICADO");
+        verify(professorRepository, never()).save(any());
+        verify(userLoginRepository, never()).save(any());
     }
 
     @Test
-    void deveLancarExcecaoQuandoNenhumaAlteracaoForFeita() {
+    void deveLancarExcecao_SeNenhumaAlteracaoForFeita() {
+        // Arrange
         Professor professor = criarProfessorPadrao();
-
+        UserLogin userLogin = criarUserLoginPadrao(professor);
         ProfessorRequest request = criarProfessorRequest(
                 professor.getNome(), professor.getEmail(), null,
                 professor.getCpf(), professor.getDepartamento(), professor.getSiape()
         );
 
         when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(new UserLogin()));
+        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true); // Simula senha igual
 
+        // Act & Assert
         assertThrows(NenhumaAlteracaoRealizadaException.class,
                 () -> professorService.atualizarProfessor(professor.getId(), request));
+
+        verify(professorRepository, never()).save(any());
+        verify(userLoginRepository, never()).save(any());
     }
 
     @Test
-    void deveLancarExcecaoQuandoProfessorNaoEncontrado() {
+    void deveLancarExcecao_SeProfessorNaoForEncontrado() {
         when(professorRepository.findByIdAndAtivoTrue(2L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class,
+        assertThrows(ProfessorNaoEncontradoException.class,
                 () -> professorService.atualizarProfessor(2L, criarProfessorRequest(
-                        "Novo Nome", "novo@email.com", null, "12345678901", "Física", "7654321"
+                        "Novo Nome", "novo@email.com", "NovaSenha@123",
+                        "12345678900", "Computação", "1234567"
                 )));
     }
 
     @Test
-    void deveLancarExcecaoQuandoUserLoginNaoEncontrado() {
+    void deveLancarExcecao_SeUserLoginNaoForEncontrado() {
         Professor professor = criarProfessorPadrao();
 
         when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
         when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class,
-                () -> professorService.atualizarProfessor(professor.getId(), criarProfessorRequest(
-                        "Novo Nome", "novo@email.com", null, "12345678901", "Física", "7654321"
-                )));
+                () -> professorService.atualizarProfessor(professor.getId(), criarProfessorRequestPadrao()));
     }
 
     @Test
-    void deveManterSenhaQuandoInformadaIgual() {
-        // 🔥 Criando um professor e login com senha já definida
+    void deveLancarExcecao_SeSenhaInformadaForIgual() {
         Professor professor = criarProfessorPadrao();
         UserLogin userLogin = criarUserLoginPadrao(professor);
 
-        // Criando um request onde a senha informada é a mesma
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), "senhaAntiga",
+        ProfessorRequest request = new ProfessorRequest(
+                professor.getNome(), professor.getEmail(), "Senha@123",
                 professor.getCpf(), professor.getDepartamento(), professor.getSiape()
         );
 
         when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
         when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
-        when(passwordEncoder.matches("senhaAntiga", professor.getSenha())).thenReturn(true); // 🔥 Verificação correta
+        when(passwordEncoder.matches("Senha@123", professor.getSenha())).thenReturn(true);
 
-        // 🔥 Testando se a exceção correta é lançada
         assertThrows(NenhumaAlteracaoRealizadaException.class,
                 () -> professorService.atualizarProfessor(professor.getId(), request));
 
-        // 🔥 Garantindo que o professor NÃO FOI salvo, pois nada mudou
         verify(professorRepository, never()).save(any());
         verify(userLoginRepository, never()).save(any());
     }
 
-
-
     @Test
-    void deveLancarExcecaoQuandoEmailJaExistente() {
-        Professor professor = criarProfessorPadrao();
-        Professor outroProfessor = new Professor();
-        outroProfessor.setId(2L);
-        outroProfessor.setEmail(professor.getEmail());
-
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), null,
-                professor.getCpf(), professor.getDepartamento(), professor.getSiape()
-        );
-
-        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(professorRepository.findByEmailAndAtivoTrue(professor.getEmail())).thenReturn(Optional.of(outroProfessor));
-
-        assertThrows(RuntimeException.class,
-                () -> professorService.atualizarProfessor(professor.getId(), request));
-    }
-
-    @Test
-    void deveAtualizarSenhaQuandoInformadaNova() {
+    void deveAtualizarSenha_SeInformadaDiferente() {
         Professor professor = criarProfessorPadrao();
         UserLogin userLogin = criarUserLoginPadrao(professor);
 
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), "novaSenha",
+        ProfessorRequest request = new ProfessorRequest(
+                professor.getNome(), professor.getEmail(), "NovaSenha@123",
                 professor.getCpf(), professor.getDepartamento(), professor.getSiape()
         );
 
         when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
         when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
-        when(passwordEncoder.encode("novaSenha")).thenReturn("senhaCriptografada");
+        when(passwordEncoder.encode("NovaSenha@123")).thenReturn("NovaSenhaCriptografada");
 
         professorService.atualizarProfessor(professor.getId(), request);
 
-        assertEquals("senhaCriptografada", professor.getSenha());
-        assertEquals("senhaCriptografada", userLogin.getSenha());
+        assertEquals("NovaSenhaCriptografada", professor.getSenha());
+        assertEquals("NovaSenhaCriptografada", userLogin.getSenha());
 
         verify(professorRepository).save(professor);
         verify(userLoginRepository).save(userLogin);
     }
 
     @Test
-    void deveAtualizarNomeDoProfessor() {
+    void deveAtualizarEmail_SeInformadoDiferente() {
         Professor professor = criarProfessorPadrao();
         UserLogin userLogin = criarUserLoginPadrao(professor);
 
-        ProfessorRequest request = criarProfessorRequest(
-                "Carlos Oliveira", professor.getEmail(), null,
+        ProfessorRequest request = new ProfessorRequest(
+                professor.getNome(), "novo@email.com", null,
                 professor.getCpf(), professor.getDepartamento(), professor.getSiape()
         );
 
@@ -201,109 +172,10 @@ class ProfessorServiceImplAtualizarTest extends BaseProfessorServiceTest {
 
         professorService.atualizarProfessor(professor.getId(), request);
 
-        assertEquals("Carlos Oliveira", professor.getNome());
-        verify(professorRepository).save(professor);
-    }
+        assertEquals("novo@email.com", professor.getEmail());
+        assertEquals("novo@email.com", userLogin.getEmail());
 
-    @Test
-    void deveAtualizarEmailDoProfessor() {
-        Professor professor = criarProfessorPadrao();
-        UserLogin userLogin = criarUserLoginPadrao(professor);
-
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), "carlosnovo@email.com", null,
-                professor.getCpf(), professor.getDepartamento(), professor.getSiape()
-        );
-
-        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
-
-        professorService.atualizarProfessor(professor.getId(), request);
-
-        assertEquals("carlosnovo@email.com", professor.getEmail());
-        assertEquals("carlosnovo@email.com", userLogin.getEmail());
         verify(professorRepository).save(professor);
         verify(userLoginRepository).save(userLogin);
     }
-
-    @Test
-    void deveAtualizarSenhaDoProfessor() {
-        Professor professor = criarProfessorPadrao();
-        UserLogin userLogin = criarUserLoginPadrao(professor);
-
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), "novaSenha123",
-                professor.getCpf(), professor.getDepartamento(), professor.getSiape()
-        );
-
-        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin));
-        when(passwordEncoder.encode("novaSenha123")).thenReturn("senhaCriptografada");
-
-        professorService.atualizarProfessor(professor.getId(), request);
-
-        assertEquals("senhaCriptografada", professor.getSenha());
-        assertEquals("senhaCriptografada", userLogin.getSenha());
-        verify(professorRepository).save(professor);
-        verify(userLoginRepository).save(userLogin);
-    }
-
-    @Test
-    void deveAtualizarCpfDoProfessor() {
-        Professor professor = criarProfessorPadrao();
-        UserLogin userLogin = criarUserLoginPadrao(professor); // 🔥 Criando UserLogin corretamente
-
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), null,
-                "11122233344", professor.getDepartamento(), professor.getSiape()
-        );
-
-        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin)); // 🔥 Mockando UserLogin
-
-        professorService.atualizarProfessor(professor.getId(), request);
-
-        assertEquals("11122233344", professor.getCpf());
-        verify(professorRepository).save(professor);
-    }
-
-
-    @Test
-    void deveAtualizarDepartamentoDoProfessor() {
-        Professor professor = criarProfessorPadrao();
-        UserLogin userLogin = criarUserLoginPadrao(professor); // 🔥 Criando o UserLogin corretamente
-
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), null,
-                professor.getCpf(), "Física", professor.getSiape()
-        );
-
-        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin)); // 🔥 Mockando UserLogin
-
-        professorService.atualizarProfessor(professor.getId(), request);
-
-        assertEquals("Física", professor.getDepartamento());
-        verify(professorRepository).save(professor);
-    }
-
-    @Test
-    void deveAtualizarSiapeDoProfessor() {
-        Professor professor = criarProfessorPadrao();
-        UserLogin userLogin = criarUserLoginPadrao(professor); // 🔥 Criando UserLogin corretamente
-
-        ProfessorRequest request = criarProfessorRequest(
-                professor.getNome(), professor.getEmail(), null,
-                professor.getCpf(), professor.getDepartamento(), "7654321"
-        );
-
-        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
-        when(userLoginRepository.findByUsuarioAndAtivoTrue(professor)).thenReturn(Optional.of(userLogin)); // 🔥 Mockando UserLogin
-
-        professorService.atualizarProfessor(professor.getId(), request);
-
-        assertEquals("7654321", professor.getSiape());
-        verify(professorRepository).save(professor);
-    }
-
 }

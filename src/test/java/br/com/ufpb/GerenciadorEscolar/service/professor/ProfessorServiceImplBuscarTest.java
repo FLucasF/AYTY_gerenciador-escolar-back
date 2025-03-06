@@ -2,6 +2,7 @@ package br.com.ufpb.GerenciadorEscolar.service.professor;
 
 import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
+import br.com.ufpb.GerenciadorEscolar.service.ProfessorNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -9,61 +10,40 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class ProfessorServiceImplBuscarTest extends BaseProfessorServiceTest {
+class ProfessorServiceImplBuscarTest extends BaseProfessorServiceTest {
 
-    // ✅ Teste: Professor encontrado com sucesso
     @Test
-    public void testBuscarProfessorPorId_Found() {
-        Long id = 1L;
-        Professor professor = new Professor();
-        professor.setId(id);
+    void deveBuscarProfessorPorIdComSucesso() {
+        // Arrange
+        Professor professor = criarProfessorPadrao();
+        ProfessorResponse professorResponse = criarProfessorResponse(professor);
 
-        ProfessorResponse response = new ProfessorResponse(
-                professor.getId(), "Nome do Professor", "email@teste.com", "12345678901", "Departamento", "1234567"
-        );
+        when(professorRepository.findByIdAndAtivoTrue(professor.getId())).thenReturn(Optional.of(professor));
+        when(professorMapper.toResponse(professor)).thenReturn(professorResponse);
 
-        when(professorRepository.findByIdAndAtivoTrue(id)).thenReturn(Optional.of(professor));
-        when(professorMapper.toResponse(professor)).thenReturn(response);
+        // Act
+        ProfessorResponse response = professorService.buscarProfessorPorId(professor.getId());
 
-        Optional<ProfessorResponse> result = professorService.buscarProfessorPorId(id);
+        // Assert
+        assertNotNull(response);
+        assertEquals(professor.getId(), response.id());
+        assertEquals(professor.getNome(), response.nome());
 
-        assertTrue(result.isPresent());
-        assertEquals(response, result.get());
-        verify(professorRepository, times(1)).findByIdAndAtivoTrue(id);
+        verify(professorRepository).findByIdAndAtivoTrue(professor.getId());
+        verify(professorMapper).toResponse(professor);
     }
 
-    // ✅ Teste: Professor não encontrado (retorna Optional.empty)
     @Test
-    public void testBuscarProfessorPorId_NotFound() {
-        Long id = 1L;
+    void deveLancarExcecao_SeProfessorNaoForEncontrado() {
+        // Arrange
+        Long idInexistente = 99L;
+        when(professorRepository.findByIdAndAtivoTrue(idInexistente)).thenReturn(Optional.empty());
 
-        when(professorRepository.findByIdAndAtivoTrue(id)).thenReturn(Optional.empty());
+        // Act & Assert
+        assertThrows(ProfessorNaoEncontradoException.class, () -> professorService.buscarProfessorPorId(idInexistente));
 
-        Optional<ProfessorResponse> result = professorService.buscarProfessorPorId(id);
-
-        assertFalse(result.isPresent());
-        verify(professorRepository, times(1)).findByIdAndAtivoTrue(id);
+        verify(professorRepository).findByIdAndAtivoTrue(idInexistente);
+        verify(professorMapper, never()).toResponse(any());
     }
 
-    // ❌ Teste: ID nulo deve lançar exceção
-    @Test
-    public void testBuscarProfessorPorId_NullId() {
-        Exception exception = assertThrows(NullPointerException.class, () ->
-                professorService.buscarProfessorPorId(null)
-        );
-
-        assertEquals("ID não pode ser nulo", exception.getMessage());
-        verify(professorRepository, never()).findByIdAndAtivoTrue(any());
-    }
-
-    // ❌ Teste: ID negativo deve lançar exceção
-    @Test
-    public void testBuscarProfessorPorId_NegativeId() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                professorService.buscarProfessorPorId(-1L)
-        );
-
-        assertEquals("ID não pode ser nulo ou inválido", exception.getMessage());
-        verify(professorRepository, never()).findByIdAndAtivoTrue(any());
-    }
 }

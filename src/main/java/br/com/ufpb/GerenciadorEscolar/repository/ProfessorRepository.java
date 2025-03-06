@@ -20,5 +20,7 @@ public interface ProfessorRepository extends JpaRepository<Professor, Long> {
 
     Optional<Professor> findByCpfAndAtivoTrue(String cpf);
 
+    Optional<Professor> findBySiapeAndAtivoTrue(String cpf);
+
 
 }

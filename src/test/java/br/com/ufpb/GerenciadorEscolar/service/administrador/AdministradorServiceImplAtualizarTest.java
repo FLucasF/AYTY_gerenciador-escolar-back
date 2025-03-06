@@ -6,6 +6,8 @@ import br.com.ufpb.GerenciadorEscolar.model.Administrador;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.service.NenhumaAlteracaoRealizadaException;
 import br.com.ufpb.GerenciadorEscolar.service.AdministradorNaoEncontradoException;
+import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
+import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -44,26 +46,33 @@ class AdministradorServiceImplAtualizarTest extends BaseAdministradorServiceTest
         assertEquals("NovaSenhaCriptografada", admin.getSenha());
         assertEquals("NovaSenhaCriptografada", userLogin.getSenha());
 
-        // Captura os objetos salvos
-        ArgumentCaptor<Administrador> adminCaptor = ArgumentCaptor.forClass(Administrador.class);
-        ArgumentCaptor<UserLogin> userLoginCaptor = ArgumentCaptor.forClass(UserLogin.class);
+        verify(administradorRepository).save(admin);
+        verify(userLoginRepository).save(userLogin);
+    }
 
-        verify(administradorRepository).save(adminCaptor.capture());
-        verify(userLoginRepository).save(userLoginCaptor.capture());
+    @Test
+    void deveLancarExcecao_SeSiapeJaEstiverCadastrado() {
+        // Arrange
+        Administrador admin = criarAdministradorPadrao();
+        UserLogin userLogin = criarUserLoginPadrao(admin);
 
-        Administrador adminSalvo = adminCaptor.getValue();
-        UserLogin userLoginSalvo = userLoginCaptor.getValue();
+        AdministradorRequest request = new AdministradorRequest(
+                admin.getNome(), admin.getEmail(), null,
+                admin.getCpf(), admin.getSetor(), "SIAPE_DUPLICADO"
+        );
 
-        // ✅ Validações do Administrador
-        assertEquals("João Souza", adminSalvo.getNome());
-        assertEquals("TI", adminSalvo.getSetor());
-        assertEquals("novo@email.com", adminSalvo.getEmail());
-        assertEquals("NovaSenhaCriptografada", adminSalvo.getSenha());
+        when(administradorRepository.findByIdAndAtivoTrue(admin.getId())).thenReturn(Optional.of(admin));
+        when(userLoginRepository.findByUsuarioAndAtivoTrue(admin)).thenReturn(Optional.of(userLogin));
+        when(administradorRepository.findBySiapeAndAtivoTrue("SIAPE_DUPLICADO")).thenReturn(Optional.of(new Administrador()));
 
-        // ✅ Validações do UserLogin
-        assertEquals("novo@email.com", userLoginSalvo.getEmail());
-        assertEquals("NovaSenhaCriptografada", userLoginSalvo.getSenha());
-        assertEquals(adminSalvo, userLoginSalvo.getUsuario());
+        // Act & Assert
+        assertThrows(SiapeJaCadastradoException.class,
+                () -> administradorService.atualizarAdministrador(admin.getId(), request));
+
+        verify(administradorRepository).findByIdAndAtivoTrue(admin.getId());
+        verify(administradorRepository).findBySiapeAndAtivoTrue("SIAPE_DUPLICADO");
+        verify(administradorRepository, never()).save(any());
+        verify(userLoginRepository, never()).save(any());
     }
 
     @Test

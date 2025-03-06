@@ -10,10 +10,10 @@ import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import java.util.Optional;
 
 class AdministradorServiceImplCadastrarTest extends BaseAdministradorServiceTest {
 
@@ -60,7 +60,6 @@ class AdministradorServiceImplCadastrarTest extends BaseAdministradorServiceTest
         assertEquals(adminSalvo, userLoginSalvo.getUsuario(), "O login deve estar associado ao administrador criado.");
     }
 
-
     @Test
     void deveLancarExcecao_SeEmailJaCadastrado() {
         // Arrange
@@ -102,5 +101,4 @@ class AdministradorServiceImplCadastrarTest extends BaseAdministradorServiceTest
         verify(administradorRepository, never()).save(any());
         verify(userLoginRepository, never()).save(any());
     }
-
 }

@@ -116,6 +116,9 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         }
 
         if (!administradorRequest.siape().equals(admin.getSiape())) {
+            if (administradorRepository.findBySiapeAndAtivoTrue(administradorRequest.siape()).isPresent()) {
+                throw new SiapeJaCadastradoException("Já existe um professor ativo cadastrado com esse SIAPE.");
+            }
             admin.setSiape(administradorRequest.siape());
             dadosAlterados = true;
         }

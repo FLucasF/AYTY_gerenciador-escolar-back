@@ -40,6 +40,9 @@ public abstract class BaseProfessorServiceTest {
         );
     }
 
+    /**
+     * Cria um Professor padrão para os testes.
+     */
     protected Professor criarProfessorPadrao() {
         Professor professor = new Professor();
         professor.setId(1L);
@@ -48,51 +51,93 @@ public abstract class BaseProfessorServiceTest {
         professor.setCpf("98765432100");
         professor.setDepartamento("Computação");
         professor.setSiape("1234567");
-        professor.setSenha("senhaAntiga");
+        professor.setSenha("Senha@123"); // Senha segura conforme requisitos
+        professor.setAtivo(true);
         return professor;
     }
 
+    /**
+     * Cria um ProfessorResponse com base em um Professor.
+     */
     protected ProfessorResponse criarProfessorResponse(Professor professor) {
         return new ProfessorResponse(
-                professor.getId(), professor.getNome(), professor.getEmail(), professor.getCpf(), professor.getDepartamento(), professor.getSiape()
+                professor.getId(),
+                professor.getNome(),
+                professor.getEmail(),
+                professor.getCpf(),
+                professor.getDepartamento(),
+                professor.getSiape()
         );
     }
 
-    protected ProfessorRequest criarProfessorRequest(String nome, String email, String senha, String cpf, String departamento, String siape) {
+    /**
+     * Cria um ProfessorRequest com dados personalizados.
+     */
+    protected ProfessorRequest criarProfessorRequest(
+            String nome, String email, String senha, String cpf, String departamento, String siape) {
         return new ProfessorRequest(nome, email, senha, cpf, departamento, siape);
     }
 
+    /**
+     * Cria um UserLogin padrão para os testes.
+     */
     protected UserLogin criarUserLoginPadrao(Professor professor) {
         UserLogin userLogin = new UserLogin();
         userLogin.setUsuario(professor);
         userLogin.setEmail(professor.getEmail());
         userLogin.setSenha(professor.getSenha());
-        return userLogin;
-    }
-
-    protected Professor criarProfessorAtivo() {
-        Professor professor = new Professor();
-        professor.setId(1L);
-        professor.setAtivo(true);
-        return professor;
-    }
-
-    protected Professor criarProfessorInativo() {
-        Professor professor = new Professor();
-        professor.setId(1L);
-        professor.setAtivo(false);
-        return professor;
-    }
-
-    protected UserLogin criarUserLoginAtivo() {
-        UserLogin userLogin = new UserLogin();
         userLogin.setAtivo(true);
         return userLogin;
     }
 
-    protected UserLogin criarUserLoginInativo() {
-        UserLogin userLogin = new UserLogin();
+    /**
+     * Cria um Professor ativo para testes.
+     */
+    protected Professor criarProfessorAtivo() {
+        Professor professor = criarProfessorPadrao();
+        professor.setAtivo(true);
+        return professor;
+    }
+
+    /**
+     * Cria um Professor inativo para testes.
+     */
+    protected Professor criarProfessorInativo() {
+        Professor professor = criarProfessorPadrao();
+        professor.setAtivo(false);
+        return professor;
+    }
+
+    /**
+     * Cria um UserLogin ativo para testes.
+     */
+    protected UserLogin criarUserLoginAtivo(Professor professor) {
+        UserLogin userLogin = criarUserLoginPadrao(professor);
+        userLogin.setAtivo(true);
+        return userLogin;
+    }
+
+    /**
+     * Cria um UserLogin inativo para testes.
+     */
+    protected UserLogin criarUserLoginInativo(Professor professor) {
+        UserLogin userLogin = criarUserLoginPadrao(professor);
         userLogin.setAtivo(false);
         return userLogin;
     }
+
+    /**
+     * Cria um ProfessorRequest padrão para testes.
+     */
+    protected ProfessorRequest criarProfessorRequestPadrao() {
+        return new ProfessorRequest(
+                "Lucas Felipe",
+                "lucas@email.com",
+                "Senha@123",
+                "98765432100",
+                "Computação",
+                "1234567"
+        );
+    }
+
 }
