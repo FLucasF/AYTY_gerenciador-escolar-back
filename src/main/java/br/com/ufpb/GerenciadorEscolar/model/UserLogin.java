@@ -1,6 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class UserLogin {
@@ -9,8 +10,13 @@ public class UserLogin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     private String email;
+
+    @NotNull
     private String senha;
+
+    @NotNull
     private boolean ativo = true;
 
     @ManyToOne

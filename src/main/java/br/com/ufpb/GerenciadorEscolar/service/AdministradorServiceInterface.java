@@ -9,10 +9,36 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface AdministradorServiceInterface {
+
+    /**
+     * Lista todos os administradores ativos com paginação.
+     */
     Page<AdministradorResponse> listarAdministradoresAtivos(Pageable pageable);
-    Optional<AdministradorResponse> buscarAdministradorPorId(Long id);
-    void desativarAdministrador(Long id);
+
+    /**
+     * Busca um administrador ativo pelo ID.
+     * @throws AdministradorNaoEncontradoException se o administrador não for encontrado.
+     */
+    AdministradorResponse buscarAdministradorPorId(Long id);
+
+    /**
+     * Cadastra um novo administrador no sistema.
+     * @throws EmailJaCadastradoException se o e-mail já estiver cadastrado.
+     * @throws CpfJaCadastradoException se o CPF já estiver cadastrado.
+     */
     AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest);
+
+    /**
+     * Atualiza um administrador ativo pelo ID.
+     * @throws AdministradorNaoEncontradoException se o administrador não for encontrado.
+     * @throws NenhumaAlteracaoRealizadaException se nenhuma alteração foi feita nos dados.
+     */
     AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest);
-    Optional<Administrador> findByEmail(String email);
+
+    /**
+     * Desativa um administrador pelo ID.
+     * @throws AdministradorNaoEncontradoException se o administrador não for encontrado.
+     */
+    void desativarAdministrador(Long id);
+
 }

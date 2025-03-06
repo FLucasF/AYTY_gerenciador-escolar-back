@@ -54,7 +54,7 @@ public class ProfessorServiceImplFindByEmailTest extends BaseProfessorServiceTes
             professorService.findByEmail(null);
         });
 
-        assertEquals("Email não pode ser vazio", exception.getMessage());
+        assertEquals("Email não pode ser nulo", exception.getMessage());
     }
 
     // ✅ Cenário 4: Email vazio

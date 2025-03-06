@@ -183,15 +183,8 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     public TurmaResponse matricularAluno(Long turmaId, Long alunoId) {
         log.info("Matriculando aluno com ID: {} na turma com ID: {}", alunoId, turmaId);
 
-        if (turmaId == null || alunoId == null) {
-            log.error("Erro: Id não pode ser nulo.");
-            throw new NullPointerException("ID não pode ser nulo");
-        }
+        validarIds(turmaId, alunoId);
 
-        if (turmaId < 0 || alunoId < 0) {
-            log.error("Erro: Id não pode ser negativo.");
-            throw new IllegalArgumentException("ID não pode ser negativo");
-        }
 
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> {
@@ -233,59 +226,56 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     @Override
     public Page<AlunoResponse> listarAlunosPorTurma(Long turmaId, Pageable pageable) {
         log.info("Listando alunos da turma com ID: {} com paginação: {}", turmaId, pageable);
-        Turma turma = turmaRepository.findById(turmaId)
-                .orElseThrow(() -> {
-                    log.error("Turma não encontrada para listagem de alunos com ID: {}", turmaId);
-                    return new RuntimeException("Turma não encontrada");
-                });
 
-        List<AlunoResponse> alunos = turma.getAlunos()
-                .stream()
-                .map(alunoMapper::toResponse)
-                .toList();
+        if (turmaId == null) {
+            throw new IllegalArgumentException("ID da turma não pode ser nulo");
+        }
+        if (turmaId < 0) {
+            throw new IllegalArgumentException("ID da turma não pode ser negativo");
+        }
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), alunos.size());
-        Page<AlunoResponse> page = new PageImpl<>(alunos.subList(start, end), pageable, alunos.size());
-        log.info("Total de alunos encontrados: {}", alunos.size());
-        return page;
+        if (!turmaRepository.existsById(turmaId)) {
+            throw new RuntimeException("Turma não encontrada");
+        }
+
+        return alunoRepository.findByTurmasId(turmaId, pageable)
+                .map(alunoMapper::toResponse);
     }
 
     @Override
-    public Page<AlunoResponse> removerAlunoDaTurma(Long turmaId, Long alunoId) {
+    public void removerAlunoDaTurma(Long turmaId, Long alunoId) {
+        validarIds(turmaId, alunoId);
+
         log.info("Removendo aluno com ID: {} da turma com ID: {}", alunoId, turmaId);
+
+        // Busca turma e aluno diretamente, lançando exceção caso não existam
         Turma turma = turmaRepository.findById(turmaId)
-                .orElseThrow(() -> {
-                    log.error("Turma não encontrada para remoção com ID: {}", turmaId);
-                    return new RuntimeException("Turma não encontrada");
-                });
+                .orElseThrow(() -> new TurmaNaoEncontradaException("Turma não encontrada"));
 
         Aluno aluno = alunoRepository.findById(alunoId)
-                .orElseThrow(() -> {
-                    log.error("Aluno não encontrado para remoção com ID: {}", alunoId);
-                    return new RuntimeException("Aluno não encontrado");
-                });
+                .orElseThrow(() -> new AlunoNaoEncontradoException("Aluno não encontrado"));
 
-        if (turma.getAlunos().contains(aluno)) {
-            turma.getAlunos().remove(aluno);
-            aluno.getTurmas().remove(turma);
-            turmaRepository.save(turma);
-            log.info("Aluno removido da turma com sucesso.");
-        } else {
-            log.warn("Tentativa de remover aluno que não está matriculado na turma. Aluno ID: {}", alunoId);
-            throw new RuntimeException("Aluno não está matriculado nesta turma.");
+        if (!turma.getAlunos().contains(aluno)) {
+            log.warn("Aluno ID {} não está matriculado na turma ID {}", alunoId, turmaId);
+            throw new AlunoNaoMatriculadoException("Aluno não está matriculado nesta turma.");
         }
 
-        List<AlunoResponse> alunosAtualizados = turma.getAlunos()
-                .stream()
-                .map(alunoMapper::toResponse)
-                .toList();
-        log.debug("Total de alunos após remoção: {}", alunosAtualizados.size());
-        return new PageImpl<>(alunosAtualizados);
+        // Remove aluno da turma e atualiza no banco
+        turma.getAlunos().remove(aluno);
+        aluno.getTurmas().remove(turma);
+        turmaRepository.save(turma);
+
+        log.info("Aluno ID {} removido com sucesso da turma ID {}", alunoId, turmaId);
     }
 
     @Override
     public Page<TurmaResponse> listarTurmasPorAluno(Long alunoId, Pageable pageable) {
+        if (alunoId == null) {
+            throw new NullPointerException("ID do aluno não pode ser nulo");
+        }
+        if (alunoId < 0) {
+            throw new IllegalArgumentException("ID do aluno não pode ser negativo");
+        }
         log.info("Listando turmas para aluno ID: {} com paginação: {}", alunoId, pageable);
         Page<Turma> turmas = turmaRepository.findByAlunosIdAndAtivoTrue(alunoId, pageable);
         log.info("Total de turmas encontradas para aluno {}: {}", alunoId, turmas.getContent().size());
@@ -294,6 +284,12 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public Page<TurmaResponse> listarTurmasPorProfessor(Long professorId, Pageable pageable) {
+        if (professorId == null) {
+            throw new NullPointerException("ID do aluno não pode ser nulo");
+        }
+        if (professorId < 0) {
+            throw new IllegalArgumentException("ID do aluno não pode ser negativo");
+        }
         log.info("Listando turmas para professor ID: {} com paginação: {}", professorId, pageable);
         Page<Turma> turmas = turmaRepository.findByProfessorIdAndAtivoTrue(professorId, pageable);
         log.info("Total de turmas encontradas para professor {}: {}", professorId, turmas.getContent().size());
@@ -308,4 +304,13 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return turmas.map(turmaMapper::toResponse);
     }
 
+
+    private void validarIds(Long turmaId, Long alunoId) {
+        if (turmaId == null || alunoId == null) {
+            throw new NullPointerException("ID não pode ser nulo");
+        }
+        if (turmaId < 0 || alunoId < 0) {
+            throw new IllegalArgumentException("ID não pode ser negativo");
+        }
+    }
 }

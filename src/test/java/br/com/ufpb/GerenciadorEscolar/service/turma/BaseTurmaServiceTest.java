@@ -54,7 +54,6 @@ public abstract class BaseTurmaServiceTest {
         turma.setNome("Turma A");
         turma.setCodigo("TURMA123");
         turma.setSemestre("2024.1");
-        turma.setAtivo(true);
         return turma;
     }
 

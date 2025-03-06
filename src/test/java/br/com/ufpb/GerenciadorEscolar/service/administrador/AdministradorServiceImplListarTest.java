@@ -6,88 +6,89 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AdministradorServiceImplListarTest extends BaseAdministradorServiceTest {
+class AdministradorServiceImplListarTest extends BaseAdministradorServiceTest {
 
-    // ✅ Testa listagem com administradores ativos
     @Test
-    public void testListarAdministradoresAtivos_Success() {
-        PageRequest pageable = PageRequest.of(0, 10);
-        Administrador admin = new Administrador();
-        admin.setId(1L);
+    void deveRetornarPaginaDeAdministradoresAtivos() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
+        Administrador admin1 = criarAdministradorPadrao();
+        Administrador admin2 = new Administrador();
+        admin2.setId(2L);
+        admin2.setNome("Maria Oliveira");
+        admin2.setEmail("maria@email.com");
+        admin2.setCpf("98765432101");
+        admin2.setSetor("Financeiro");
+        admin2.setSiape("7654321");
+        admin2.setSenha("Senha@123");
 
-        AdministradorResponse response = new AdministradorResponse(
-                admin.getId(), "Nome", "email@teste.com", "cpf123", "setor", "1234567"
+        List<Administrador> administradores = List.of(admin1, admin2);
+        Page<Administrador> page = new PageImpl<>(administradores, pageable, administradores.size());
+
+        when(administradorRepository.findAllByAtivoTrue(pageable)).thenReturn(page);
+        when(administradorMapper.toResponse(admin1)).thenReturn(
+                new AdministradorResponse(admin1.getId(), admin1.getNome(), admin1.getEmail(), admin1.getCpf(), admin1.getSetor(), admin1.getSiape())
         );
-        when(administradorMapper.toResponse(admin)).thenReturn(response);
+        when(administradorMapper.toResponse(admin2)).thenReturn(
+                new AdministradorResponse(admin2.getId(), admin2.getNome(), admin2.getEmail(), admin2.getCpf(), admin2.getSetor(), admin2.getSiape())
+        );
 
-        Page<Administrador> adminPage = new PageImpl<>(Collections.singletonList(admin));
-        when(administradorRepository.findAllByAtivoTrue(pageable)).thenReturn(adminPage);
-
+        // Act
         Page<AdministradorResponse> result = administradorService.listarAdministradoresAtivos(pageable);
 
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        assertEquals(response, result.getContent().get(0));
-        verify(administradorRepository, times(1)).findAllByAtivoTrue(pageable);
+        // Assert
+        assertFalse(result.isEmpty(), "A página não deve estar vazia.");
+        assertEquals(2, result.getTotalElements(), "Deve haver exatamente 2 administradores ativos.");
+        assertEquals("João Silva", result.getContent().get(0).nome(), "O primeiro administrador deve ser João Silva.");
+        assertEquals("Maria Oliveira", result.getContent().get(1).nome(), "O segundo administrador deve ser Maria Oliveira.");
+
+        verify(administradorRepository).findAllByAtivoTrue(pageable);
+        verify(administradorMapper, times(2)).toResponse(any(Administrador.class));
     }
 
-    // ✅ Testa listagem quando não há administradores ativos
     @Test
-    public void testListarAdministradoresAtivos_EmptyList() {
-        PageRequest pageable = PageRequest.of(0, 10);
+    void deveRetornarPaginaVazia_QuandoNaoHouverAdministradoresAtivos() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Administrador> pageVazia = Page.empty();
 
-        Page<Administrador> emptyPage = new PageImpl<>(Collections.emptyList());
-        when(administradorRepository.findAllByAtivoTrue(pageable)).thenReturn(emptyPage);
+        when(administradorRepository.findAllByAtivoTrue(pageable)).thenReturn(pageVazia);
 
+        // Act
         Page<AdministradorResponse> result = administradorService.listarAdministradoresAtivos(pageable);
 
-        assertNotNull(result);
-        assertEquals(0, result.getTotalElements());
-        assertTrue(result.getContent().isEmpty());
-        verify(administradorRepository, times(1)).findAllByAtivoTrue(pageable);
+        // Assert
+        assertTrue(result.isEmpty(), "A página deve estar vazia.");
+
+        verify(administradorRepository).findAllByAtivoTrue(pageable);
+        verify(administradorMapper, never()).toResponse(any());
     }
 
-    // ✅ Testa erro no banco de dados
     @Test
-    public void testListarAdministradoresAtivos_DatabaseFailure() {
-        PageRequest pageable = PageRequest.of(0, 10);
+    void deveLancarExcecao_SeErroNoRepositorio() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10);
 
         when(administradorRepository.findAllByAtivoTrue(pageable))
-                .thenThrow(new RuntimeException("Erro ao acessar banco de dados"));
+                .thenThrow(new RuntimeException("Erro no banco de dados"));
 
-        Exception exception = assertThrows(RuntimeException.class, () ->
-                administradorService.listarAdministradoresAtivos(pageable)
+        // Act & Assert
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> administradorService.listarAdministradoresAtivos(pageable)
         );
 
-        assertEquals("Erro ao acessar banco de dados", exception.getMessage());
-        verify(administradorRepository, times(1)).findAllByAtivoTrue(pageable);
+        assertEquals("Erro no banco de dados", exception.getMessage(), "A mensagem da exceção deve ser 'Erro no banco de dados'.");
+
+        verify(administradorRepository).findAllByAtivoTrue(pageable);
+        verify(administradorMapper, never()).toResponse(any());
     }
 
-
-    // ❌ **Teste: Falha ao converter entidade para DTO** → Deve falhar
-    @Test
-    public void testListarAdministradoresAtivos_FailureOnMapping() {
-        PageRequest pageable = PageRequest.of(0, 10);
-        Administrador admin = new Administrador();
-        admin.setId(1L);
-
-        Page<Administrador> adminPage = new PageImpl<>(Collections.singletonList(admin));
-        when(administradorRepository.findAllByAtivoTrue(pageable)).thenReturn(adminPage);
-
-        // Simula falha ao converter entidade para DTO
-        when(administradorMapper.toResponse(admin))
-                .thenThrow(new RuntimeException("Erro ao converter administrador para DTO"));
-
-        Exception exception = assertThrows(RuntimeException.class, () ->
-                administradorService.listarAdministradoresAtivos(pageable)
-        );
-
-        assertEquals("Erro ao converter administrador para DTO", exception.getMessage());
-    }
 }

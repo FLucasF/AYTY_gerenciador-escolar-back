@@ -11,12 +11,16 @@ import java.util.Optional;
 
 @Repository
 public interface AdministradorRepository extends JpaRepository<Administrador, Long> {
-    Optional<Administrador> findByEmailAndAtivoTrue(String email);
 
     Page<Administrador> findAllByAtivoTrue(Pageable pageable);
 
     Optional<Administrador> findByIdAndAtivoTrue(Long id);
 
     Optional<Administrador> findByCpfAndAtivoTrue(String cpf);
+
+    Optional<Administrador> findByEmailAndAtivoTrue(String email);
+
+    Optional<Administrador> findBySiapeAndAtivoTrue(String siape);
+
 
 }

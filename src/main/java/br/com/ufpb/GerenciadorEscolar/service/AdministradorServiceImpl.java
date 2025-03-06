@@ -4,20 +4,16 @@ import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.AdministradorMapper;
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -28,7 +24,6 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     private final AdministradorMapper administradorMapper;
     private final UserLoginRepository userLoginRepository;
 
-    @Autowired
     public AdministradorServiceImpl(AdministradorRepository administradorRepository,
                                     PasswordEncoder passwordEncoder,
                                     AdministradorMapper administradorMapper,
@@ -40,103 +35,68 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     }
 
     @Override
-    public Page<AdministradorResponse> listarAdministradoresAtivos(Pageable pageable) {
-        log.info("Listando administradores ativos com paginação: {}", pageable);
-        Page<AdministradorResponse> page = administradorRepository.findAllByAtivoTrue(pageable)
-                .map(administradorMapper::toResponse);
-        log.info("Total de administradores ativos encontrados: {}", page.getTotalElements());
-        return page;
-    }
-
-    @Override
-    public Optional<AdministradorResponse> buscarAdministradorPorId(Long id) {
-        log.info("Buscando administrador por ID: {}", id);
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("ID não pode ser nulo ou inválido");
-        }
-
-        Optional<AdministradorResponse> response = administradorRepository.findByIdAndAtivoTrue(id)
-                .map(administradorMapper::toResponse);
-        if (response.isEmpty()) {
-            log.warn("Administrador não encontrado para o ID: {}", id);
-        }
-        return response;
-    }
-
-
-    @Override
     public AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest) {
-        log.info("Iniciando cadastro de administrador: {}", administradorRequest);
+        log.info("Iniciando cadastro de administrador: {}", administradorRequest.email());
 
         if (administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email()).isPresent()) {
-            log.warn("Tentativa de cadastrar administrador com e-mail já existente: {}", administradorRequest.email());
-            throw new RuntimeException("Já existe um administrador ativo cadastrado com esse e-mail.");
+            throw new EmailJaCadastradoException("Já existe um administrador ativo cadastrado com esse e-mail.");
         }
 
         if (administradorRepository.findByCpfAndAtivoTrue(administradorRequest.cpf()).isPresent()) {
-            log.warn("Tentativa de cadastrar administrador com CPF já existente: {}", administradorRequest.cpf());
-            throw new RuntimeException("Já existe um administrador ativo cadastrado com esse CPF.");
+            throw new CpfJaCadastradoException("Já existe um administrador ativo cadastrado com esse CPF.");
         }
 
-        List<Map.Entry<String, String>> campos = Arrays.asList(
-                new AbstractMap.SimpleEntry<>("Nome", administradorRequest.nome()),
-                new AbstractMap.SimpleEntry<>("Email", administradorRequest.email()),
-                new AbstractMap.SimpleEntry<>("CPF", administradorRequest.cpf()),
-                new AbstractMap.SimpleEntry<>("Setor", administradorRequest.setor()),
-                new AbstractMap.SimpleEntry<>("Senha", administradorRequest.senha()),
-                new AbstractMap.SimpleEntry<>("SIAPE", administradorRequest.siape())
-        );
-
-        campos.forEach(campo -> {
-            if (campo.getValue() == null) {
-                throw new NullPointerException(campo.getKey() + " não pode ser nulo.");
-            }
-
-            if (campo.getValue().trim().isEmpty()) {
-                throw new IllegalArgumentException(campo.getKey() + " não pode ser vazio.");
-            }
-        });
+        if (administradorRepository.findBySiapeAndAtivoTrue(administradorRequest.siape()).isPresent()) {
+            throw new SiapeJaCadastradoException("Já existe um administrador ativo cadastrado com esse SIAPE.");
+        }
 
         Administrador admin = administradorMapper.toEntity(administradorRequest);
         admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
 
-        try {
-            administradorRepository.save(admin);
-            log.info("Administrador cadastrado com sucesso. ID: {}", admin.getId());
+        administradorRepository.save(admin);
+        log.info("Administrador cadastrado com sucesso. ID: {}", admin.getId());
 
-            UserLogin userLogin = new UserLogin(administradorRequest.email(), administradorRequest.senha(), admin);
-            userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
-            userLoginRepository.save(userLogin);
-
-            log.info("Administrador e Login cadastrados com sucesso. ID: {}", admin.getId());
-
-            log.info("Administrador e Login cadastrados com sucesso. ID: {}", admin.getId());
-        } catch (Exception e) {
-            log.error("Erro ao cadastrar administrador: {}", e.getMessage());
-            throw new RuntimeException("Erro ao cadastrar administrador: " + e.getMessage(), e);
-        }
+        UserLogin userLogin = new UserLogin();
+        userLogin.setEmail(admin.getEmail());
+        userLogin.setUsuario(admin);
+        userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
+        userLoginRepository.save(userLogin);
+        log.info("Administrador e Login cadastrados com sucesso. ID: {}", admin.getId());
 
         return administradorMapper.toResponse(admin);
     }
 
+
     @Override
-    public AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest) {
-        log.info(administradorRequest.toString());
+    public Page<AdministradorResponse> listarAdministradoresAtivos(Pageable pageable) {
+        log.info("Listando administradores ativos com paginação: {}", pageable);
+        return administradorRepository.findAllByAtivoTrue(pageable)
+                .map(administradorMapper::toResponse);
+    }
 
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("ID não pode ser nulo ou inválido");
-        }
-
-        log.info("Atualizando administrador com ID: {}", id);
+    @Override
+    public AdministradorResponse buscarAdministradorPorId(Long id) {
+        log.info("Buscando administrador por ID: {}", id);
 
         Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
-                    log.error("Administrador não encontrado ou inativo para o ID: {}", id);
-                    return new RuntimeException("Administrador não encontrado ou inativo.");
+                    log.warn("Administrador não encontrado para o ID: {}", id);
+                    return new AdministradorNaoEncontradoException("Administrador não encontrado.");
                 });
 
+        return administradorMapper.toResponse(admin);
+    }
+
+
+    @Override
+    public AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest) {
+        log.info("Atualizando administrador com ID: {}", id);
+
+        Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
+                .orElseThrow(() -> new AdministradorNaoEncontradoException("Administrador não encontrado ou inativo."));
+
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
-                .orElseThrow(() -> new RuntimeException("Login não encontrado para o Administrador"));
+                .orElseThrow(() -> new AdministradorNaoEncontradoException("Login não encontrado para o Administrador"));
 
         boolean dadosAlterados = false;
 
@@ -167,15 +127,12 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         }
 
         if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
-            String novaSenhaCriptografada = passwordEncoder.encode(administradorRequest.senha());
-            if (!novaSenhaCriptografada.equals(admin.getSenha())) {
-                admin.setSenha(novaSenhaCriptografada);
-                userLogin.setSenha(novaSenhaCriptografada);
+            if (!passwordEncoder.matches(administradorRequest.senha(), admin.getSenha())) {
+                admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
+                userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
                 dadosAlterados = true;
-                log.info("Senha atualizada para o administrador ID: {}", id);
             } else {
                 log.info("Senha informada é igual à senha atual. Nenhuma alteração realizada.");
-                throw new NenhumaAlteracaoRealizadaException();
             }
         }
 
@@ -191,52 +148,21 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     }
 
 
-
-
-
     @Override
     public void desativarAdministrador(Long id) {
         log.info("Desativando administrador com ID: {}", id);
 
         Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
-                .orElseThrow(() -> {
-                    log.error("Administrador não encontrado para desativação com ID: {}", id);
-                    return new RuntimeException("Administrador não encontrado");
-                });
+                .orElseThrow(() -> new AdministradorNaoEncontradoException("Administrador não encontrado"));
 
-        // Desativa o login caso exista e esteja ativo
         userLoginRepository.findByUsuarioAndAtivoTrue(admin).ifPresent(userLogin -> {
-            if (userLogin.isAtivo()) {
-                userLogin.setAtivo(false);
-                userLoginRepository.save(userLogin);
-                log.info("Login do administrador desativado com sucesso. ID: {}", id);
-            } else {
-                log.info("Login do administrador já estava inativo. Nenhuma alteração necessária. ID: {}", id);
-            }
+            userLogin.setAtivo(false);
+            userLoginRepository.save(userLogin);
+            log.info("Login do administrador desativado. ID: {}", id);
         });
 
-        // Desativar o administrador
         admin.setAtivo(false);
         administradorRepository.save(admin);
-        log.info("Administrador desativado com sucesso. ID: {}", id);
+        log.info("Administrador desativado. ID: {}", id);
     }
-
-
-
-    @Override
-    public Optional<Administrador> findByEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email não pode ser nulo ou vazio");
-        }
-
-        log.debug("Buscando administrador por email: {}", email);
-        Optional<Administrador> adminOpt = administradorRepository.findByEmailAndAtivoTrue(email);
-
-        if (adminOpt.isEmpty()) {
-            log.warn("Administrador não encontrado para o email: {}", email);
-        }
-
-        return adminOpt;
-    }
-
 }

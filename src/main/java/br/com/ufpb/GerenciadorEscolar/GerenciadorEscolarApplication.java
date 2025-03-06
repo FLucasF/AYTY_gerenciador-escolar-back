@@ -16,29 +16,20 @@ public class GerenciadorEscolarApplication {
 	}
 
 	@Bean
-	public CommandLineRunner loadAdmin(AdministradorServiceImpl administradorService, PasswordEncoder passwordEncoder) {
+	public CommandLineRunner loadAdmin(AdministradorServiceImpl administradorService) {
 		return args -> {
-			// Verifica se o administrador já existe antes de criar um novo
-			if (administradorService.findByEmail("admin@dominio.com").isEmpty()) {
-				// Cria o AdministradorRequest com os dados necessários
-				AdministradorRequest adminRequest = new AdministradorRequest(
-						"Administrador", // Nome
-						"admin@dominio.com", // Email
-						"admin123", // Senha
-						"00000000000", // CPF
-						"TI", // Setor
-						"123456" // SIAPE
-				);
-
-				try {
-					// Chama o método para cadastrar o administrador
-					administradorService.cadastrarAdministrador(adminRequest);
-					System.out.println("✔️ Admin criado com sucesso.");
-				} catch (RuntimeException e) {
-					System.out.println("❌ Erro ao criar o admin: " + e.getMessage());
-				}
-			} else {
-				System.out.println("⚠️ O administrador já existe.");
+			try {
+				administradorService.cadastrarAdministrador(new AdministradorRequest(
+						"Administrador",  // Nome
+						"admin@dominio.com",  // Email
+						"admin123",  // Senha
+						"00000000000",  // CPF
+						"TI",  // Setor
+						"1234567"  // SIAPE (7 dígitos)
+				));
+				System.out.println("✔️ Administrador criado com sucesso.");
+			} catch (RuntimeException e) {
+				System.out.println("⚠️ O administrador já existe ou ocorreu um erro: " + e.getMessage());
 			}
 		};
 	}

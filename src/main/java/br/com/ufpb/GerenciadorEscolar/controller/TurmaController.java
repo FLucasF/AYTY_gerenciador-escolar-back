@@ -86,9 +86,9 @@ public class TurmaController {
     }
 
     @DeleteMapping("/{turmaId}/remover/{alunoId}")
-    public ResponseEntity<Page<AlunoResponse>> removerAlunoDaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
-        Page<AlunoResponse> alunosAtualizados = turmaService.removerAlunoDaTurma(turmaId, alunoId);
-        return ResponseEntity.ok(alunosAtualizados);
+    public ResponseEntity<Void> removerAlunoDaTurma(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        turmaService.removerAlunoDaTurma(turmaId, alunoId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{turmaId}/alunos")

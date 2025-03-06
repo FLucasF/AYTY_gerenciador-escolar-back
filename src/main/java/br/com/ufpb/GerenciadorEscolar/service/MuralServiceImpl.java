@@ -7,78 +7,77 @@ import br.com.ufpb.GerenciadorEscolar.model.Mural;
 import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.Turma;
 import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
+import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
 public class MuralServiceImpl implements MuralServiceInterface {
 
     private final MuralRepository muralRepository;
+    private final TurmaRepository turmaRepository;
+    private final ProfessorRepository professorRepository;
     private final MuralMapper muralMapper;
 
     @Autowired
-    public MuralServiceImpl(MuralRepository muralRepository, TurmaRepository turmaRepository, MuralMapper muralMapper) {
+    public MuralServiceImpl(MuralRepository muralRepository,
+                            TurmaRepository turmaRepository,
+                            ProfessorRepository professorRepository,
+                            MuralMapper muralMapper) {
         this.muralRepository = muralRepository;
+        this.turmaRepository = turmaRepository;
+        this.professorRepository = professorRepository;
         this.muralMapper = muralMapper;
     }
 
     @Override
     public MuralResponse criarPostagem(MuralRequest muralRequest) {
-        log.info("Criando postagem no mural para turma ID: {} e professor ID: {}",
+        log.info("Criando postagem no mural para Turma ID: {} e Professor ID: {}",
                 muralRequest.turmaId(), muralRequest.professorId());
 
-        if (muralRequest.professorId() == null) {
-            log.error("O campo professorId é obrigatório para publicar uma postagem.");
-            throw new IllegalArgumentException("O campo professorId é obrigatório para publicar uma postagem.");
-        }
+        Turma turma = turmaRepository.findById(muralRequest.turmaId())
+                .orElseThrow(() -> {
+                    log.error("Turma não encontrada para ID: {}", muralRequest.turmaId());
+                    return new TurmaNaoEncontradaException("Turma não encontrada");
+                });
+
+        Professor professor = professorRepository.findById(muralRequest.professorId())
+                .orElseThrow(() -> {
+                    log.error("Professor não encontrado para ID: {}", muralRequest.professorId());
+                    return new ProfessorNaoEncontradoException("Professor não encontrado");
+                });
 
         Mural mural = muralMapper.toEntity(muralRequest);
-
-        Professor professor = new Professor();
-        professor.setId(muralRequest.professorId());
-        mural.setProfessor(professor);
-        log.debug("Professor definido para a postagem com ID: {}", muralRequest.professorId());
-
-        Turma turma = new Turma();
-        turma.setId(muralRequest.turmaId());
         mural.setTurma(turma);
-        log.debug("Turma definida para a postagem com ID: {}", muralRequest.turmaId());
-
+        mural.setProfessor(professor);
         mural.setAtivo(true);
 
-        try {
-            muralRepository.save(mural);
-            log.info("Postagem no mural salva com sucesso. ID da postagem: {}", mural.getId());
-        } catch (Exception e) {
-            log.error("Erro ao salvar a postagem no mural: {}", e.getMessage());
-            throw new RuntimeException("Erro ao salvar a postagem no mural: " + e.getMessage(), e);
-        }
+        mural = muralRepository.save(mural);
+        log.info("Postagem criada com sucesso. ID da postagem: {}", mural.getId());
 
-        MuralResponse response = muralMapper.toResponse(mural);
-        log.info("Retornando resposta da postagem: {}", response);
-        return response;
+        return muralMapper.toResponse(mural);
     }
 
     @Override
-    public Optional<MuralResponse> buscarPostagemPorId(Long id) {
+    public MuralResponse buscarPostagemPorId(Long id) {
         log.info("Buscando postagem no mural com ID: {}", id);
-        Optional<MuralResponse> response = muralRepository.findById(id).map(muralMapper::toResponse);
-        if (response.isEmpty()) {
-            log.warn("Postagem no mural não encontrada para o ID: {}", id);
-        }
-        return response;
+
+        return muralRepository.findById(id)
+                .map(muralMapper::toResponse)
+                .orElseThrow(() -> {
+                    log.warn("Postagem não encontrada para ID: {}", id);
+                    return new PostagemNaoEncontradaException("Postagem não encontrada");
+                });
     }
 
     @Override
     public Page<MuralResponse> listarPostagensPorTurma(Long idTurma, Pageable pageable) {
-        log.info("Listando postagens para a turma ID: {} com paginação: {}", idTurma, pageable);
+        log.info("Listando postagens ativas para Turma ID: {} com paginação: {}", idTurma, pageable);
 
         Page<MuralResponse> responses = muralRepository
                 .findByTurmaIdAndAtivoTrue(idTurma, pageable)
@@ -90,14 +89,17 @@ public class MuralServiceImpl implements MuralServiceInterface {
 
     @Override
     public void deletarPostagem(Long id) {
-        log.info("Deletando postagem no mural com ID: {}", id);
-        Mural mural = muralRepository.findById(id)
+        log.info("Iniciando exclusão lógica da postagem com ID: {}", id);
+
+        Mural mural = muralRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
-                    log.error("Postagem não encontrada para deleção com ID: {}", id);
-                    return new RuntimeException("Postagem não encontrada");
+                    log.warn("Tentativa de exclusão falhou. Postagem não encontrada ou já está desativada. ID: {}", id);
+                    return new PostagemNaoEncontradaException("Postagem não encontrada");
                 });
+
         mural.setAtivo(false);
         muralRepository.save(mural);
         log.info("Postagem desativada com sucesso. ID: {}", id);
     }
+
 }

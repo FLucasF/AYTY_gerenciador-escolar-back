@@ -12,7 +12,7 @@ public interface MuralServiceInterface {
 
     MuralResponse criarPostagem(MuralRequest muralRequest);
 
-    Optional<MuralResponse> buscarPostagemPorId(Long id);
+    MuralResponse buscarPostagemPorId(Long id);
 
     Page<MuralResponse> listarPostagensPorTurma(Long idTurma, Pageable pageable);
 

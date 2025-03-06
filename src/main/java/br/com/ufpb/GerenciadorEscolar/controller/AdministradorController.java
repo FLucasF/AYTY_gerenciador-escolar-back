@@ -3,14 +3,14 @@ package br.com.ufpb.GerenciadorEscolar.controller;
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
 import br.com.ufpb.GerenciadorEscolar.service.AdministradorServiceInterface;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/administradores")
@@ -24,25 +24,24 @@ public class AdministradorController {
     }
 
     @PostMapping
-    public ResponseEntity<AdministradorResponse> cadastrarAdministrador(@RequestBody AdministradorRequest administradorRequest) {
+    public ResponseEntity<AdministradorResponse> cadastrarAdministrador(@RequestBody @Valid AdministradorRequest administradorRequest) {
         AdministradorResponse novoAdmin = administradorService.cadastrarAdministrador(administradorRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoAdmin);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<AdministradorResponse> buscarAdministradorPorId(@PathVariable @Min(1) Long id) {
+        AdministradorResponse adminResponse = administradorService.buscarAdministradorPorId(id);
+        return ResponseEntity.ok(adminResponse);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AdministradorResponse> atualizarAdministrador(
-            @PathVariable Long id,
-            @RequestBody AdministradorRequest administradorRequest) {
+            @PathVariable @Min(1) Long id,
+            @RequestBody @Valid AdministradorRequest administradorRequest) {
 
         AdministradorResponse administradorAtualizado = administradorService.atualizarAdministrador(id, administradorRequest);
         return ResponseEntity.ok(administradorAtualizado);
-    }
-
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> desativarAdministrador(@PathVariable Long id) {
-        administradorService.desativarAdministrador(id);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
@@ -51,12 +50,9 @@ public class AdministradorController {
         return ResponseEntity.ok(adminPage);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AdministradorResponse> buscarAdministradorPorId(@PathVariable Long id) {
-        Optional<AdministradorResponse> adminResponse = administradorService.buscarAdministradorPorId(id);
-        return adminResponse.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> desativarAdministrador(@PathVariable @Min(1) Long id) {
+        administradorService.desativarAdministrador(id);
+        return ResponseEntity.noContent().build();
     }
-
 }
-

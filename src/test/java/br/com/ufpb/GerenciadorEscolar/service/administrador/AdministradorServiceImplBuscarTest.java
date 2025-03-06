@@ -1,69 +1,52 @@
 package br.com.ufpb.GerenciadorEscolar.service.administrador;
+
 import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
 import br.com.ufpb.GerenciadorEscolar.model.Administrador;
+import br.com.ufpb.GerenciadorEscolar.service.AdministradorNaoEncontradoException;
 import org.junit.jupiter.api.Test;
-
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AdministradorServiceImplBuscarTest extends BaseAdministradorServiceTest {
+class AdministradorServiceImplBuscarTest extends BaseAdministradorServiceTest {
 
-    // ✅ Teste: Administrador encontrado com sucesso
     @Test
-    public void testBuscarAdministradorPorId_Found() {
-        Long id = 1L;
-        Administrador admin = new Administrador();
-        admin.setId(id);
+    void deveRetornarAdministrador_QuandoIdExistir() {
+        // Arrange - Criando um administrador existente no banco
+        Administrador admin = criarAdministradorPadrao();
+        AdministradorResponse responseEsperado = mock(AdministradorResponse.class);
 
-        AdministradorResponse response = new AdministradorResponse(
-                admin.getId(), "Nome", "email@teste.com", "cpf123", "setor", "1234567"
-        );
+        when(administradorRepository.findByIdAndAtivoTrue(admin.getId())).thenReturn(Optional.of(admin));
+        when(administradorMapper.toResponse(admin)).thenReturn(responseEsperado);
 
-        when(administradorRepository.findByIdAndAtivoTrue(id)).thenReturn(Optional.of(admin));
-        when(administradorMapper.toResponse(admin)).thenReturn(response);
+        // Act
+        AdministradorResponse response = administradorService.buscarAdministradorPorId(admin.getId());
 
-        Optional<AdministradorResponse> result = administradorService.buscarAdministradorPorId(id);
+        // Assert
+        assertNotNull(response);
+        assertEquals(responseEsperado, response);
 
-        assertTrue(result.isPresent());
-        assertEquals(response, result.get());
-        verify(administradorRepository, times(1)).findByIdAndAtivoTrue(id);
+        verify(administradorRepository, times(1)).findByIdAndAtivoTrue(admin.getId());
+        verify(administradorMapper, times(1)).toResponse(admin);
     }
 
-    // ✅ Teste: Administrador não encontrado (retorna Optional.empty)
     @Test
-    public void testBuscarAdministradorPorId_NotFound() {
-        Long id = 1L;
+    void deveLancarExcecao_SeAdministradorNaoForEncontrado() {
+        // Arrange
+        Long idInexistente = 99L;
+        when(administradorRepository.findByIdAndAtivoTrue(idInexistente)).thenReturn(Optional.empty());
 
-        when(administradorRepository.findByIdAndAtivoTrue(id)).thenReturn(Optional.empty());
-
-        Optional<AdministradorResponse> result = administradorService.buscarAdministradorPorId(id);
-
-        assertFalse(result.isPresent());
-        verify(administradorRepository, times(1)).findByIdAndAtivoTrue(id);
-    }
-
-    // ❌ Teste: ID nulo deve lançar exceção
-    @Test
-    public void testBuscarAdministradorPorId_NullId() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                administradorService.buscarAdministradorPorId(null)
+        // Act & Assert
+        AdministradorNaoEncontradoException exception = assertThrows(
+                AdministradorNaoEncontradoException.class,
+                () -> administradorService.buscarAdministradorPorId(idInexistente)
         );
 
-        assertEquals("ID não pode ser nulo ou inválido", exception.getMessage());
-        verify(administradorRepository, never()).findByIdAndAtivoTrue(any());
-    }
+        assertEquals("Administrador não encontrado.", exception.getMessage());
 
-    // ❌ Teste: ID negativo deve lançar exceção
-    @Test
-    public void testBuscarAdministradorPorId_NegativeId() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                administradorService.buscarAdministradorPorId(-1L)
-        );
-
-        assertEquals("ID não pode ser nulo ou inválido", exception.getMessage());
-        verify(administradorRepository, never()).findByIdAndAtivoTrue(any());
+        verify(administradorRepository, times(1)).findByIdAndAtivoTrue(idInexistente);
+        verify(administradorMapper, never()).toResponse(any());
     }
 }
