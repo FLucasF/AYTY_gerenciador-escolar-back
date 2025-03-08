@@ -35,4 +35,5 @@ public class Professor extends Usuario {
 
     public String getSiape() { return siape; }
     public void setSiape(String siape) { this.siape = siape; }
+
 }

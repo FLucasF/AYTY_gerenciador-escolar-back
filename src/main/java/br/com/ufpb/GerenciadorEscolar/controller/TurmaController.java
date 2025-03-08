@@ -54,7 +54,6 @@ public class TurmaController {
         return ResponseEntity.ok(turmas);
     }
 
-
     @PostMapping
     public ResponseEntity<TurmaResponse> criarTurma(@RequestBody TurmaRequest turmaRequest) {
         TurmaResponse novaTurma = turmaService.criarTurma(turmaRequest);

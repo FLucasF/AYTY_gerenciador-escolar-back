@@ -1,7 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar;
 
 import br.com.ufpb.GerenciadorEscolar.service.*;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,13 +10,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NenhumaAlteracaoRealizadaException.class)
-    public ResponseEntity<String> handleNenhumaAlteracaoRealizada(NenhumaAlteracaoRealizadaException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-
     @ExceptionHandler(PostagemNaoEncontradaException.class)
     public ResponseEntity<String> handlePostagemNaoEncontrada(PostagemNaoEncontradaException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MaterialNaoEncontradoException.class)
+    public ResponseEntity<String> handleMaterialNaoEncontrado(MaterialNaoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
@@ -41,8 +40,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
+    @ExceptionHandler(NenhumaAlteracaoRealizadaException.class)
+    public ResponseEntity<String> handleNenhumaAlteracaoRealizada(NenhumaAlteracaoRealizadaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
 
-
+    @ExceptionHandler(MinioException.class)
+    public ResponseEntity<String> handleMinioException(MinioException ex) {
+        String errorMessage = "Erro no MinIO: " + ex.getMessage();
+        System.err.println(errorMessage);
+        return ResponseEntity.status(ex.getHttpStatus()).body("Falha ao processar o arquivo. Contate o suporte.");
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -57,7 +65,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        // Você pode logar o erro completo aqui para debug
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Erro interno no servidor: " + ex.getMessage());
     }

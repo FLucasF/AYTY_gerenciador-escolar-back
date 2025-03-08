@@ -1,13 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "materiais")
@@ -16,75 +10,48 @@ public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String nomeArquivo;
-    private String urlArquivo;
 
-    @Column(name = "media_id", nullable = false)
-    private Long mediaId;
+    private String arquivoId; // Guarda apenas o ID do arquivo no MinIO
+
+    @Enumerated(EnumType.STRING)
+    private TipoArquivo tipoArquivo; // Define se é IMAGEM, VIDEO ou AUDIO
 
     @ManyToOne
     @JoinColumn(name = "turma_id", nullable = false)
-    private Turma turma;
+    private Turma turma; // Material pertence a uma turma
 
     @ManyToOne
     @JoinColumn(name = "professor_id", nullable = false)
-    private Professor professor;
+    private Professor professor; // Quem enviou o material
 
-    private boolean ativo = true;
+    @ManyToOne
+    @JoinColumn(name = "mural_id")
+    private Mural mural; // Opcional: se este material está vinculado a um mural
 
-    public Long getId() {
-        return id;
-    }
+    private boolean ativo = true; // Para controle de visibilidade
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public static final String SERVICE_NAME = "gerenciadorEscolar"; // Nome fixo do serviço
 
-    public String getNomeArquivo() {
-        return nomeArquivo;
-    }
 
-    public void setNomeArquivo(String nomeArquivo) {
-        this.nomeArquivo = nomeArquivo;
-    }
+    // Getters e Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getUrlArquivo() {
-        return urlArquivo;
-    }
+    public String getArquivoId() { return arquivoId; }
+    public void setArquivoId(String arquivoId) { this.arquivoId = arquivoId; }
 
-    public void setUrlArquivo(String urlArquivo) {
-        this.urlArquivo = urlArquivo;
-    }
+    public TipoArquivo getTipoArquivo() { return tipoArquivo; }
+    public void setTipoArquivo(TipoArquivo tipoArquivo) { this.tipoArquivo = tipoArquivo; }
 
-    public Turma getTurma() {
-        return turma;
-    }
+    public Turma getTurma() { return turma; }
+    public void setTurma(Turma turma) { this.turma = turma; }
 
-    public void setTurma(Turma turma) {
-        this.turma = turma;
-    }
+    public Professor getProfessor() { return professor; }
+    public void setProfessor(Professor professor) { this.professor = professor; }
 
-    public Professor getProfessor() {
-        return professor;
-    }
+    public Mural getMural() { return mural; }
+    public void setMural(Mural mural) { this.mural = mural; }
 
-    public void setProfessor(Professor professor) {
-        this.professor = professor;
-    }
-
-    public boolean isAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
-
-    public Long getMediaId() {
-        return mediaId;
-    }
-
-    public void setMediaId(Long mediaId) {
-        this.mediaId = mediaId;
-    }
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 }

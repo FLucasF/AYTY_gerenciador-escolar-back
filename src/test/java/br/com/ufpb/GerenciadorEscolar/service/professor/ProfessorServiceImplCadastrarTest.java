@@ -20,10 +20,7 @@ class ProfessorServiceImplCadastrarTest extends BaseProfessorServiceTest {
     @Test
     void deveCadastrarProfessorELoginComSucesso() {
         // Arrange
-        ProfessorRequest request = criarProfessorRequest(
-                "Lucas Silva", "lucas@email.com", "Senha@123",
-                "98765432100", "Matemática", "1234567"
-        );
+        ProfessorRequest request = criarProfessorRequestPadrao();
 
         Professor professor = criarProfessorPadrao();
 

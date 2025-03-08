@@ -82,8 +82,6 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         return alunoMapper.toResponse(aluno);
     }
 
-
-
     @Override
     public AlunoResponse atualizarAluno(Long id, AlunoRequest alunoRequest) {
         log.info("Atualizando aluno com ID: {}", id);

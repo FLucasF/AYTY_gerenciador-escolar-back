@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/administradores")
 @Validated
 public class AdministradorController {
+    //falta material, turma, usuario
+
 
     private final AdministradorServiceInterface administradorService;
 
@@ -35,6 +37,12 @@ public class AdministradorController {
         return ResponseEntity.ok(adminResponse);
     }
 
+    @GetMapping
+    public ResponseEntity<Page<AdministradorResponse>> listarAdministradores(Pageable pageable) {
+        Page<AdministradorResponse> adminPage = administradorService.listarAdministradoresAtivos(pageable);
+        return ResponseEntity.ok(adminPage);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AdministradorResponse> atualizarAdministrador(
             @PathVariable @Min(1) Long id,
@@ -44,11 +52,6 @@ public class AdministradorController {
         return ResponseEntity.ok(administradorAtualizado);
     }
 
-    @GetMapping
-    public ResponseEntity<Page<AdministradorResponse>> listarAdministradores(Pageable pageable) {
-        Page<AdministradorResponse> adminPage = administradorService.listarAdministradoresAtivos(pageable);
-        return ResponseEntity.ok(adminPage);
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> desativarAdministrador(@PathVariable @Min(1) Long id) {
