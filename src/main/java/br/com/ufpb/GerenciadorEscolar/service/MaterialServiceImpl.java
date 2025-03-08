@@ -176,10 +176,14 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
                 .orElseThrow(() -> new RuntimeException("Material não encontrado"));
         log.info("Material encontrado: {}", material.getId());
 
-        // Chamada GET para obter a URL assinada, aceitando qualquer Content-Type
+        // Constrói a URI para chamar o endpoint do MinIO que espera /get/{serviceName}/{mediaId}
+        String uri = MINIO_BASE_URL + "/" + Material.SERVICE_NAME + "/" + material.getArquivoId();
+        log.info("URI construída para buscar URL assinada: {}", uri);
+
         String mediaUrl = webClient.get()
-                .uri(MINIO_BASE_URL + "/get/" + material.getArquivoId())
+                .uri(uri)
                 .accept(MediaType.ALL)
+                .header("api-key", "123")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> {
                     log.error("Erro ao buscar URL assinada para material ID {} no MinIO. Código: {}",
@@ -199,6 +203,7 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         );
     }
 
+
     @Override
     public MaterialResponse atualizarMaterial(Long id, MaterialRequest materialRequest, byte[] file) {
         log.info("Atualizando material com ID: {}", id);
@@ -208,6 +213,7 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         String updatedArquivoId = webClient.put()
                 .uri(MINIO_BASE_URL + "/update/" + material.getArquivoId())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header("api-key", "123")
                 .bodyValue(file)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> {
@@ -230,22 +236,44 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
 
     @Override
     public void deletarMaterial(Long id) {
-        log.info("Deletando material com ID: {}", id);
+        log.info("🗑️ Deletando material com ID: {}", id);
+
         Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Material não encontrado"));
-        webClient.delete()
-                .uri(MINIO_BASE_URL + "/delete/" + material.getArquivoId())
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> {
-                    log.error("Erro ao remover arquivo do MinIO. Código: {}", response.statusCode().value());
-                    return Mono.error(new RuntimeException("Erro ao remover material do MinIO."));
-                })
-                .toBodilessEntity()
-                .block();
+                .orElseThrow(() -> new RuntimeException("❌ Material não encontrado"));
+
+        if (material.getArquivoId() != null) {
+            String objectPath = Material.SERVICE_NAME + "/" + material.getArquivoId(); // Usa a constante
+
+            log.info("🔄 Enviando requisição para remover o arquivo no MinIO. Caminho: {}", objectPath);
+
+            try {
+                webClient.delete()
+                        .uri(MINIO_BASE_URL + "/" + objectPath) // URL do endpoint do MinIO para remoção
+                        .header("api-key", "123")
+                        .retrieve()
+                        .onStatus(HttpStatusCode::isError, response -> {
+                            log.error("⚠️ Erro ao remover arquivo do MinIO. Código: {}", response.statusCode().value());
+                            return Mono.error(new RuntimeException("Erro ao remover material do MinIO."));
+                        })
+                        .toBodilessEntity()
+                        .block();
+
+                log.info("✅ Arquivo removido com sucesso do MinIO. Caminho: {}", objectPath);
+            } catch (Exception e) {
+                log.error("❌ Falha ao remover o arquivo do MinIO. Motivo: {}", e.getMessage());
+                throw new RuntimeException("Erro ao excluir arquivo do MinIO: " + e.getMessage(), e);
+            }
+        } else {
+            log.warn("⚠️ Nenhum arquivo associado encontrado para o material ID: {}", id);
+        }
+
+        // Desativar material no banco de dados
         material.setAtivo(false);
         materialRepository.save(material);
-        log.info("Material deletado com sucesso. ID: {}", id);
+        log.info("✅ Material desativado no sistema. ID: {}", id);
     }
+
+
 
     @Override
     public void associarMaterialAoMural(Long materialId, br.com.ufpb.GerenciadorEscolar.model.Mural mural) {

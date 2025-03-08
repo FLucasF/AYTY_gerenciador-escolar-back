@@ -192,12 +192,19 @@ public class MuralServiceImpl implements MuralServiceInterface {
         log.info("🗑️ Desativando postagem no mural com ID: {}", id);
         Mural mural = muralRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> new RuntimeException("❌ Postagem não encontrada"));
+
         if (mural.getImagemId() != null) {
-            log.info("Removendo material associado à imagem, ID: {}", mural.getImagemId());
-            materialService.deletarMaterial(mural.getImagemId());
+            log.info("🔄 Removendo material associado à imagem no MinIO, ID: {}", mural.getImagemId());
+            try {
+                materialService.deletarMaterial(mural.getImagemId()); // Agora só precisa passar o ID
+            } catch (Exception e) {
+                log.error("❌ Erro ao excluir a mídia no MinIO: {}", e.getMessage());
+            }
         }
+
         mural.setAtivo(false);
         muralRepository.save(mural);
         log.info("✅ Postagem desativada com sucesso. ID: {}", id);
     }
+
 }

@@ -4,6 +4,7 @@ import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
 import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
 import br.com.ufpb.GerenciadorEscolar.service.MuralServiceImpl;
 import br.com.ufpb.GerenciadorEscolar.service.MuralServiceInterface;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/murais")
+@Slf4j
 public class MuralController {
 
     private final MuralServiceImpl muralService;
@@ -43,6 +45,16 @@ public class MuralController {
         // Neste exemplo, utilizamos o valor da constante Material.SERVICE_NAME no serviço.
         MuralResponse response = muralService.buscarPostagemPorId(id);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarMaterial(@PathVariable Long id) {
+        log.info("🗑️ Recebendo solicitação para deletar material com ID: {}", id);
+
+        muralService.deletarPostagem(id);
+
+        log.info("✅ Material deletado com sucesso. ID: {}", id);
+        return ResponseEntity.noContent().build();
     }
 
 }
