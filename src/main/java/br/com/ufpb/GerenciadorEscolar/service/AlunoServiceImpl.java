@@ -7,6 +7,7 @@ import br.com.ufpb.GerenciadorEscolar.model.Aluno;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AlunoRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
+import br.com.ufpb.GerenciadorEscolar.util.UsuarioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -92,45 +93,21 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
                 .orElseThrow(() -> new AlunoNaoEncontradoException("Login não encontrado para o Aluno"));
 
-        boolean dadosAlterados = false;
-        boolean loginAlterado = false;  // ✅ Verifica se precisa atualizar o UserLogin
+        boolean dadosAlterados = UsuarioUtils.atualizarDadosUsuario(
+                aluno,
+                userLogin,
+                alunoRequest.nome(),
+                alunoRequest.email(),
+                alunoRequest.cpf(),
+                alunoRequest.senha(),
+                passwordEncoder
+        );
 
-        if (!alunoRequest.nome().equals(aluno.getNome())) {
-            aluno.setNome(alunoRequest.nome());
-            dadosAlterados = true;
-        }
-
-        if (!alunoRequest.cpf().equals(aluno.getCpf())) {
-            aluno.setCpf(alunoRequest.cpf());
-            dadosAlterados = true;
-        }
+        boolean loginAlterado = !alunoRequest.email().equals(aluno.getEmail());
 
         if (!alunoRequest.curso().equals(aluno.getCurso())) {
             aluno.setCurso(alunoRequest.curso());
             dadosAlterados = true;
-        }
-
-        if (!alunoRequest.email().equals(aluno.getEmail())) {
-            if (alunoRepository.findByEmailAndAtivoTrue(alunoRequest.email()).isPresent()) {
-                throw new EmailJaCadastradoException("Já existe outro aluno ativo cadastrado com esse e-mail.");
-            }
-            aluno.setEmail(alunoRequest.email());
-            userLogin.setEmail(alunoRequest.email());
-            dadosAlterados = true;
-            loginAlterado = true;
-        }
-
-        if (alunoRequest.senha() != null && !alunoRequest.senha().trim().isEmpty()) {
-            if (!passwordEncoder.matches(alunoRequest.senha(), aluno.getSenha())) {
-                if (!alunoRequest.senha().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
-                }
-                aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
-                userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha()));
-                dadosAlterados = true;
-            } else {
-                log.info("Senha informada é igual à senha atual. Nenhuma alteração realizada.");
-            }
         }
 
         if (!dadosAlterados) {
@@ -140,12 +117,14 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         alunoRepository.save(aluno);
 
         if (loginAlterado) {
+            userLogin.setEmail(alunoRequest.email());
             userLoginRepository.save(userLogin);
         }
 
         log.info("Aluno atualizado com sucesso. ID: {}", aluno.getId());
         return alunoMapper.toResponse(aluno);
     }
+
 
 
     @Override

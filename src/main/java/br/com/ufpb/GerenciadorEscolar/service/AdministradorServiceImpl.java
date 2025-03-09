@@ -7,6 +7,7 @@ import br.com.ufpb.GerenciadorEscolar.model.Administrador;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
+import br.com.ufpb.GerenciadorEscolar.util.UsuarioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -98,59 +99,22 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
                 .orElseThrow(() -> new AdministradorNaoEncontradoException("Login não encontrado para o Administrador"));
 
-        boolean dadosAlterados = false;
-
-        if (!administradorRequest.nome().equals(admin.getNome())) {
-            admin.setNome(administradorRequest.nome());
-            dadosAlterados = true;
-        }
-
-        if (!administradorRequest.cpf().equals(admin.getCpf())) {
-            admin.setCpf(administradorRequest.cpf());
-            dadosAlterados = true;
-        }
-
-        if (!administradorRequest.setor().equals(admin.getSetor())) {
-            admin.setSetor(administradorRequest.setor());
-            dadosAlterados = true;
-        }
-
-        if (!administradorRequest.siape().equals(admin.getSiape())) {
-            if (administradorRepository.findBySiapeAndAtivoTrue(administradorRequest.siape()).isPresent()) {
-                throw new SiapeJaCadastradoException("Já existe um professor ativo cadastrado com esse SIAPE.");
-            }
-            admin.setSiape(administradorRequest.siape());
-            dadosAlterados = true;
-        }
-
-        if (!administradorRequest.email().equals(admin.getEmail())) {
-            if (administradorRepository.findByEmailAndAtivoTrue(administradorRequest.email()).isPresent()) {
-                throw new EmailJaCadastradoException("Já existe outro aluno ativo cadastrado com esse e-mail.");
-            }
-
-            admin.setEmail(administradorRequest.email());
-            userLogin.setEmail(administradorRequest.email());
-            dadosAlterados = true;
-        }
-
-        if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
-            if (!passwordEncoder.matches(administradorRequest.senha(), admin.getSenha())) {
-                if (!administradorRequest.senha().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
-                }
-                admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
-                userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
-                dadosAlterados = true;
-            } else {
-                log.info("Senha informada é igual à senha atual. Nenhuma alteração realizada.");
-            }
-        }
+        boolean dadosAlterados = UsuarioUtils.atualizarDadosUsuario(
+                admin,
+                userLogin,
+                administradorRequest.nome(),
+                administradorRequest.email(),
+                administradorRequest.cpf(),
+                administradorRequest.senha(),
+                passwordEncoder
+        );
 
         if (!dadosAlterados) {
             throw new NenhumaAlteracaoRealizadaException();
         }
 
         administradorRepository.save(admin);
+        userLogin.setEmail(admin.getEmail());
         userLoginRepository.save(userLogin);
 
         log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());

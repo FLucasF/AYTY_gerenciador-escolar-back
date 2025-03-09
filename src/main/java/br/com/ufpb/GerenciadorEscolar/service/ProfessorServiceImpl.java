@@ -7,6 +7,7 @@ import br.com.ufpb.GerenciadorEscolar.model.Professor;
 import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
+import br.com.ufpb.GerenciadorEscolar.util.UsuarioUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -96,25 +97,22 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(professor)
                 .orElseThrow(() -> new ProfessorNaoEncontradoException("Login não encontrado para o Professor"));
 
-        boolean dadosAlterados = false;
-        boolean loginAlterado = false;  // ✅ Flag para evitar salvar UserLogin desnecessariamente
+        boolean dadosAlterados = UsuarioUtils.atualizarDadosUsuario(
+                professor,
+                userLogin,
+                professorRequest.nome(),
+                professorRequest.email(),
+                professorRequest.cpf(),
+                professorRequest.senha(),
+                passwordEncoder
+        );
 
-        if (!professorRequest.nome().equals(professor.getNome())) {
-            professor.setNome(professorRequest.nome());
-            dadosAlterados = true;
-        }
-
-        if (!professorRequest.cpf().equals(professor.getCpf())) {
-            professor.setCpf(professorRequest.cpf());
-            dadosAlterados = true;
-        }
-
-        if (!professorRequest.departamento().equals(professor.getDepartamento())) {
+        if (professorRequest.departamento() != null && !professorRequest.departamento().equals(professor.getDepartamento())) {
             professor.setDepartamento(professorRequest.departamento());
             dadosAlterados = true;
         }
 
-        if (!professorRequest.siape().equals(professor.getSiape())) {
+        if (professorRequest.siape() != null && !professorRequest.siape().equals(professor.getSiape())) {
             if (professorRepository.findBySiapeAndAtivoTrue(professorRequest.siape()).isPresent()) {
                 throw new SiapeJaCadastradoException("Já existe um professor ativo cadastrado com esse SIAPE.");
             }
@@ -122,40 +120,12 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
             dadosAlterados = true;
         }
 
-        if (!professorRequest.email().equals(professor.getEmail())) {
-            if (professorRepository.findByEmailAndAtivoTrue(professorRequest.email()).isPresent()) {
-                throw new EmailJaCadastradoException("Já existe outro professor ativo cadastrado com esse e-mail.");
-            }
-            professor.setEmail(professorRequest.email());
-            userLogin.setEmail(professorRequest.email());
-            dadosAlterados = true;
-            loginAlterado = true;
-        }
-
-        if (professorRequest.senha() != null && !professorRequest.senha().trim().isEmpty()) {
-            if (!passwordEncoder.matches(professorRequest.senha(), professor.getSenha())) {
-                if (!professorRequest.senha().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
-                }
-                professor.setSenha(passwordEncoder.encode(professorRequest.senha()));
-                userLogin.setSenha(passwordEncoder.encode(professorRequest.senha()));
-                dadosAlterados = true;
-                loginAlterado = true;
-            } else {
-                log.info("Senha informada é igual à senha atual. Nenhuma alteração realizada.");
-                throw new NenhumaAlteracaoRealizadaException();
-            }
-        }
-
         if (!dadosAlterados) {
             throw new NenhumaAlteracaoRealizadaException();
         }
 
         professorRepository.save(professor);
-
-        if (loginAlterado) {
-            userLoginRepository.save(userLogin);
-        }
+        userLoginRepository.save(userLogin);
 
         log.info("Professor atualizado com sucesso. ID: {}", professor.getId());
         return professorMapper.toResponse(professor);
