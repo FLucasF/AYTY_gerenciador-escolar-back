@@ -17,10 +17,6 @@ public record AlunoRequest(
         @Email(message = "Email inválido")
         String email,
 
-        @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-                message = "A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial."
-        )
         String senha,
 
         @NotBlank(message = "Campo CPF não pode ser vazio")

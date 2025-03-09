@@ -115,20 +115,22 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
                 throw new EmailJaCadastradoException("Já existe outro aluno ativo cadastrado com esse e-mail.");
             }
             aluno.setEmail(alunoRequest.email());
-            userLogin.setEmail(alunoRequest.email()); // ✅ Atualiza o email no UserLogin
+            userLogin.setEmail(alunoRequest.email());
             dadosAlterados = true;
-            loginAlterado = true; // ✅ Marca que o login precisa ser salvo
+            loginAlterado = true;
         }
 
         if (alunoRequest.senha() != null && !alunoRequest.senha().trim().isEmpty()) {
-            if (passwordEncoder.matches(alunoRequest.senha(), aluno.getSenha())) {
-                throw new NenhumaAlteracaoRealizadaException();
+            if (!passwordEncoder.matches(alunoRequest.senha(), aluno.getSenha())) {
+                if (!alunoRequest.senha().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
+                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+                }
+                aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
+                userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha()));
+                dadosAlterados = true;
+            } else {
+                log.info("Senha informada é igual à senha atual. Nenhuma alteração realizada.");
             }
-
-            aluno.setSenha(passwordEncoder.encode(alunoRequest.senha()));
-            userLogin.setSenha(passwordEncoder.encode(alunoRequest.senha())); // ✅ Atualiza a senha no UserLogin
-            dadosAlterados = true;
-            loginAlterado = true; // ✅ Marca que o login precisa ser salvo
         }
 
         if (!dadosAlterados) {
@@ -137,7 +139,6 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
 
         alunoRepository.save(aluno);
 
-        // ✅ Só salva o UserLogin se email ou senha forem alterados
         if (loginAlterado) {
             userLoginRepository.save(userLogin);
         }

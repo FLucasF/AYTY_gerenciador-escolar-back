@@ -6,6 +6,10 @@ import br.com.ufpb.GerenciadorEscolar.service.MuralServiceImpl;
 import br.com.ufpb.GerenciadorEscolar.service.MuralServiceInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +41,28 @@ public class MuralController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/turma/{idTurma}")
+    public ResponseEntity<Page<MuralResponse>> listarPostagensPorTurma(
+            @PathVariable("idTurma") Long idTurma,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "dataCriacao,desc") String sort) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("dataCriacao")));
+
+        log.info("📜 Listando postagens da turma ID: {} com paginação: {}", idTurma, pageable);
+
+        Page<MuralResponse> response = muralService.listarPostagensPorTurma(idTurma, pageable);
+
+        if (response.isEmpty()) {
+            log.warn("⚠️ Nenhuma postagem encontrada para a turma ID: {}", idTurma);
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<MuralResponse> buscarPostagemPorId(
@@ -48,7 +74,7 @@ public class MuralController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarMaterial(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarPostagem(@PathVariable Long id) {
         log.info("🗑️ Recebendo solicitação para deletar material com ID: {}", id);
 
         muralService.deletarPostagem(id);

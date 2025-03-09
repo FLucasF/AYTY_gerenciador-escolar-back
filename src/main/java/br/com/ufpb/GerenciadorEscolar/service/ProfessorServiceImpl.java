@@ -127,15 +127,18 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
                 throw new EmailJaCadastradoException("Já existe outro professor ativo cadastrado com esse e-mail.");
             }
             professor.setEmail(professorRequest.email());
-            userLogin.setEmail(professorRequest.email()); // ✅ Atualiza o email no UserLogin
+            userLogin.setEmail(professorRequest.email());
             dadosAlterados = true;
             loginAlterado = true;
         }
 
         if (professorRequest.senha() != null && !professorRequest.senha().trim().isEmpty()) {
             if (!passwordEncoder.matches(professorRequest.senha(), professor.getSenha())) {
+                if (!professorRequest.senha().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
+                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+                }
                 professor.setSenha(passwordEncoder.encode(professorRequest.senha()));
-                userLogin.setSenha(passwordEncoder.encode(professorRequest.senha())); // ✅ Atualiza a senha no UserLogin
+                userLogin.setSenha(passwordEncoder.encode(professorRequest.senha()));
                 dadosAlterados = true;
                 loginAlterado = true;
             } else {
@@ -150,7 +153,6 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
 
         professorRepository.save(professor);
 
-        // ✅ Só salva o UserLogin se houver alteração no email ou senha
         if (loginAlterado) {
             userLoginRepository.save(userLogin);
         }

@@ -135,6 +135,9 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
         if (administradorRequest.senha() != null && !administradorRequest.senha().trim().isEmpty()) {
             if (!passwordEncoder.matches(administradorRequest.senha(), admin.getSenha())) {
+                if (!administradorRequest.senha().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
+                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+                }
                 admin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
                 userLogin.setSenha(passwordEncoder.encode(administradorRequest.senha()));
                 dadosAlterados = true;
