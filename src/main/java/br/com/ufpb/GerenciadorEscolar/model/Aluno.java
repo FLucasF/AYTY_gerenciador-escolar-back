@@ -2,6 +2,8 @@ package br.com.ufpb.GerenciadorEscolar.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.ManyToMany;
 
@@ -12,7 +14,8 @@ public class Aluno extends Usuario {
     private String curso;
 
     @ManyToMany(mappedBy = "alunos")
-    private List<Turma> turmas;
+    private List<Turma> turmas = new ArrayList<>();  // Inicializado para evitar null
+
 
     public Aluno() {
         super();

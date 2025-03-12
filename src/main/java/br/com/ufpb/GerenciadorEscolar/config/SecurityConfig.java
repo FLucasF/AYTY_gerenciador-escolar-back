@@ -22,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserDetailsServiceImpl userDetailsServiceImpl; // Usamos a nova classe
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsServiceImpl userDetailsServiceImpl) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -37,9 +37,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsServiceImpl); // Agora usamos a nova classe
+        authProvider.setUserDetailsService(userDetailsServiceImpl);
         authProvider.setPasswordEncoder(passwordEncoder());
-
         return new ProviderManager(authProvider);
     }
 
@@ -52,6 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/turmas/**", "/mural/**").hasAnyRole("ADMIN", "PROFESSOR", "ALUNO")
                         .requestMatchers(HttpMethod.POST, "/mural/**").hasRole("PROFESSOR")
                         .anyRequest().authenticated()
@@ -59,4 +59,5 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 }

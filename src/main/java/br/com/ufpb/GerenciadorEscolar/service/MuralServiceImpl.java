@@ -46,16 +46,16 @@ public class MuralServiceImpl implements MuralServiceInterface {
 
     @Override
     public MuralResponse criarPostagem(MuralRequest muralRequest, MultipartFile imagem) {
-        log.info("📝 Criando nova postagem no mural para Turma ID: {} e Professor ID: {}",
+        log.info("Criando nova postagem no mural para Turma ID: {} e Professor ID: {}",
                 muralRequest.turmaId(), muralRequest.professorId());
 
         // Recupera a Turma e o Professor
         Turma turma = turmaRepository.findByIdAndAtivoTrue(muralRequest.turmaId())
-                .orElseThrow(() -> new RuntimeException("❌ Turma não encontrada"));
+                .orElseThrow(() -> new TurmaNaoEncontradaException("Turma não encontrada"));
         log.debug("Turma encontrada: ID {}", turma.getId());
 
         Professor professor = professorRepository.findByIdAndAtivoTrue(muralRequest.professorId())
-                .orElseThrow(() -> new RuntimeException("❌ Professor não encontrado"));
+                .orElseThrow(() -> new ProfessorNaoEncontradoException("Professor não encontrado"));
         log.debug("Professor encontrado: ID {}", professor.getId());
 
         // Cria o mural inicialmente sem imagem associada para obter um ID para associação
@@ -134,7 +134,7 @@ public class MuralServiceImpl implements MuralServiceInterface {
     public MuralResponse buscarPostagemPorId(Long id) {
         log.info("🔍 Buscando postagem no mural com ID: {}", id);
         Mural mural = muralRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("❌ Postagem não encontrada"));
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Postagem não encontrada"));
         log.info("Postagem encontrada: ID {}", mural.getId());
 
         String imagemUrl = null;
@@ -191,7 +191,7 @@ public class MuralServiceImpl implements MuralServiceInterface {
     public void deletarPostagem(Long id) {
         log.info("🗑️ Desativando postagem no mural com ID: {}", id);
         Mural mural = muralRepository.findByIdAndAtivoTrue(id)
-                .orElseThrow(() -> new RuntimeException("❌ Postagem não encontrada"));
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Postagem não encontrada"));
 
         if (mural.getImagemId() != null) {
             log.info("🔄 Removendo material associado à imagem no MinIO, ID: {}", mural.getImagemId());

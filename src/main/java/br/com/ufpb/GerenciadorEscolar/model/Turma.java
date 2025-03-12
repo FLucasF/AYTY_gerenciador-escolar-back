@@ -2,6 +2,8 @@ package br.com.ufpb.GerenciadorEscolar.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,16 +24,14 @@ public class Turma {
     private Professor professor;
 
     @ManyToMany
-    @JoinTable(
-            name = "matricula",
+    @JoinTable(name = "turma_aluno",
             joinColumns = @JoinColumn(name = "turma_id"),
-            inverseJoinColumns = @JoinColumn(name = "aluno_id")
-    )
-    private List<Aluno> alunos;
+            inverseJoinColumns = @JoinColumn(name = "aluno_id"))
+    private List<Aluno> alunos = new ArrayList<>();
 
     private boolean ativo = true;
 
-    private static final int TAMANHO_MAXIMO = 10;
+    private static final int TAMANHO_MAXIMO = 40;
 
     public Long getId() {
         return id;

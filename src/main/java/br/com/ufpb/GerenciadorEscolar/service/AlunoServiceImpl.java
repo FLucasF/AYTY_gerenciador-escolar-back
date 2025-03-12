@@ -20,6 +20,7 @@ import java.util.Optional;
 @Slf4j
 public class AlunoServiceImpl implements AlunoServiceInterface {
 
+    private final UsuarioUtils usuarioUtils;
     private final AlunoRepository alunoRepository;
     private final PasswordEncoder passwordEncoder;
     private final AlunoMapper alunoMapper;
@@ -28,11 +29,13 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
     public AlunoServiceImpl(AlunoRepository alunoRepository,
                             PasswordEncoder passwordEncoder,
                             AlunoMapper alunoMapper,
-                            UserLoginRepository userLoginRepository) {
+                            UserLoginRepository userLoginRepository,
+                            UsuarioUtils usuarioUtils) {
         this.alunoRepository = alunoRepository;
         this.passwordEncoder = passwordEncoder;
         this.alunoMapper = alunoMapper;
         this.userLoginRepository = userLoginRepository;
+        this.usuarioUtils = usuarioUtils;
     }
 
     @Override
@@ -91,9 +94,9 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
                 .orElseThrow(() -> new AlunoNaoEncontradoException("Aluno não encontrado ou inativo."));
 
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(aluno)
-                .orElseThrow(() -> new AlunoNaoEncontradoException("Login não encontrado para o Aluno"));
+                .orElseThrow(() -> new LoginNaoEncontradoException("Login não encontrado para o Aluno"));
 
-        boolean dadosAlterados = UsuarioUtils.atualizarDadosUsuario(
+        boolean dadosAlterados = usuarioUtils.atualizarDadosUsuario(
                 aluno,
                 userLogin,
                 alunoRequest.nome(),
@@ -103,9 +106,7 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
                 passwordEncoder
         );
 
-        boolean loginAlterado = !alunoRequest.email().equals(aluno.getEmail());
-
-        if (!alunoRequest.curso().equals(aluno.getCurso())) {
+        if (alunoRequest.curso() != null && !alunoRequest.curso().equals(aluno.getCurso())) {
             aluno.setCurso(alunoRequest.curso());
             dadosAlterados = true;
         }
@@ -115,17 +116,11 @@ public class AlunoServiceImpl implements AlunoServiceInterface {
         }
 
         alunoRepository.save(aluno);
-
-        if (loginAlterado) {
-            userLogin.setEmail(alunoRequest.email());
-            userLoginRepository.save(userLogin);
-        }
+        userLoginRepository.save(userLogin);
 
         log.info("Aluno atualizado com sucesso. ID: {}", aluno.getId());
         return alunoMapper.toResponse(aluno);
     }
-
-
 
     @Override
     public void desativarAluno(Long id) {

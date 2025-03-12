@@ -24,15 +24,17 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
     private final PasswordEncoder passwordEncoder;
     private final ProfessorMapper professorMapper;
     private final UserLoginRepository userLoginRepository;
+    private final UsuarioUtils usuarioUtils;
 
     public ProfessorServiceImpl(ProfessorRepository professorRepository,
                                 PasswordEncoder passwordEncoder,
                                 ProfessorMapper professorMapper,
-                                UserLoginRepository userLoginRepository) {
+                                UserLoginRepository userLoginRepository, UsuarioUtils usuarioUtils) {
         this.professorRepository = professorRepository;
         this.passwordEncoder = passwordEncoder;
         this.professorMapper = professorMapper;
         this.userLoginRepository = userLoginRepository;
+        this.usuarioUtils = usuarioUtils;
     }
 
     @Override
@@ -95,9 +97,9 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
                 .orElseThrow(() -> new ProfessorNaoEncontradoException("Professor não encontrado ou inativo."));
 
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(professor)
-                .orElseThrow(() -> new ProfessorNaoEncontradoException("Login não encontrado para o Professor"));
+                .orElseThrow(() -> new LoginNaoEncontradoException("Login não encontrado para o Professor"));
 
-        boolean dadosAlterados = UsuarioUtils.atualizarDadosUsuario(
+        boolean dadosAlterados = usuarioUtils.atualizarDadosUsuario(
                 professor,
                 userLogin,
                 professorRequest.nome(),

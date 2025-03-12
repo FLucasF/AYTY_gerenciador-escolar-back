@@ -3,66 +3,37 @@ package br.com.ufpb.GerenciadorEscolar.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
-import java.util.Optional;
+import java.time.temporal.ChronoUnit;
 
 @Component
 public class JwtUtil {
 
-    @Value("${app.token.key}")
-    private String TOKEN_KEY;
+    @Value("${jwt.access.secret}")
+    private String accessSecret;
 
-    public String generateToken(UserDetails userDetails, String role) {
-        Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+    public String generateAccessToken(UserDetails userDetails) {
         return JWT.create()
                 .withSubject(userDetails.getUsername())
-                .withClaim("role", role)
-                .withExpiresAt(expirationToken())
-                .sign(algorithm);
+                .withClaim("role", userDetails.getAuthorities().iterator().next().getAuthority())
+                .withExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES))
+                .sign(Algorithm.HMAC256(accessSecret));
     }
 
-    private Instant expirationToken() {
-        return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
-    }
-
-    public boolean isTokenExpired(String token) {
+    public DecodedJWT validateToken(String token) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
-            Date expiration = JWT.require(algorithm).build().verify(token).getExpiresAt();
-            return expiration != null && expiration.before(new Date());
+            return JWT.require(Algorithm.HMAC256(accessSecret)).build().verify(token);
         } catch (JWTVerificationException e) {
-            return true;
+            throw new RuntimeException("Token inválido ou expirado!");
         }
     }
 
-    public Optional<String> extractUsername(String token) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
-            return Optional.ofNullable(JWT.require(algorithm).build().verify(token).getSubject());
-        } catch (JWTVerificationException e) {
-            return Optional.empty();
-        }
-    }
-
-    public Optional<String> extractRole(String token) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
-            return Optional.ofNullable(JWT.require(algorithm).build().verify(token).getClaim("role").asString());
-        } catch (JWTVerificationException e) {
-            return Optional.empty();
-        }
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        return extractUsername(token)
-                .map(username -> username.equals(userDetails.getUsername()) && !isTokenExpired(token))
-                .orElse(false);
+    public String extractUsername(String token) {
+        return validateToken(token).getSubject();
     }
 }

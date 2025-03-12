@@ -12,6 +12,7 @@ import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -38,7 +39,12 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
     private final MaterialMapper materialMapper;
     private final WebClient webClient;
 
-    private static final String MINIO_BASE_URL = "http://localhost:8080/api/media";
+    @Value("${minio.base.url}")
+    private String minioBaseUrl;
+
+    @Value("${minio.api.key}")
+    private String minioApiKey;
+
 
     @Autowired
     public MaterialServiceImpl(MaterialRepository materialRepository,
@@ -76,15 +82,14 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         };
         multipartBody.add("file", fileResource);
         multipartBody.add("uploadedBy", professor.getId().toString());
-        multipartBody.add("serviceName", Material.SERVICE_NAME); // "gerenciadorEscolar"
+        multipartBody.add("serviceName", Material.SERVICE_NAME); // Ex.: "gerenciadorEscolar"
         multipartBody.add("entityId", turma.getId().toString());
         log.info("Multipart montado com file: {} e entityId: {}", materialRequest.nomeArquivo(), turma.getId());
 
-        // Realiza o upload para o MinIO, aceitando qualquer Content-Type na resposta
-        log.info("Enviando requisição POST para MinIO em {}", MINIO_BASE_URL);
+        // Envia a requisição para o MinIO usando URI relativa (a base já está configurada)
+        log.info("Enviando requisição POST para MinIO");
         MinioResponse minioResponse = webClient.post()
-                .uri(MINIO_BASE_URL)
-                .header("api-key", "123")
+                .uri("") // URI relativa, usa a baseUrl do WebClientConfig
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .accept(MediaType.ALL)
                 .body(BodyInserters.fromMultipartData(multipartBody))
@@ -105,7 +110,7 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
             throw new RuntimeException("Erro ao processar o upload do arquivo no MinIO.");
         }
 
-        // Extrai somente o ID do arquivo retornado
+        // Extrai o ID do arquivo retornado
         String arquivoId = minioResponse.id().toString();
         log.info("ID do arquivo extraído: {}", arquivoId);
 
@@ -132,9 +137,9 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
             return Page.empty();
         }
 
-        // Recupera as URLs assinadas via MinIO
+        // Recupera as URLs assinadas via MinIO usando URI relativa
         List<MaterialResponse> minioMateriais = webClient.get()
-                .uri(MINIO_BASE_URL + "/lists/" + serviceName + "/" + turmaId)
+                .uri("/lists/" + serviceName + "/" + turmaId)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> {
@@ -176,14 +181,13 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
                 .orElseThrow(() -> new RuntimeException("Material não encontrado"));
         log.info("Material encontrado: {}", material.getId());
 
-        // Constrói a URI para chamar o endpoint do MinIO que espera /get/{serviceName}/{mediaId}
-        String uri = MINIO_BASE_URL + "/" + Material.SERVICE_NAME + "/" + material.getArquivoId();
+        // Constrói a URI relativa para buscar a URL assinada no MinIO
+        String uri = "/" + Material.SERVICE_NAME + "/" + material.getArquivoId();
         log.info("URI construída para buscar URL assinada: {}", uri);
 
         String mediaUrl = webClient.get()
                 .uri(uri)
                 .accept(MediaType.ALL)
-                .header("api-key", "123")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> {
                     log.error("Erro ao buscar URL assinada para material ID {} no MinIO. Código: {}",
@@ -204,6 +208,7 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
     }
 
 
+
     @Override
     public MaterialResponse atualizarMaterial(Long id, MaterialRequest materialRequest, byte[] file) {
         log.info("Atualizando material com ID: {}", id);
@@ -211,9 +216,8 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
                 .orElseThrow(() -> new RuntimeException("Material não encontrado"));
 
         String updatedArquivoId = webClient.put()
-                .uri(MINIO_BASE_URL + "/update/" + material.getArquivoId())
+                .uri("/update/" + material.getArquivoId())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header("api-key", "123")
                 .bodyValue(file)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> {
@@ -236,43 +240,39 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
 
     @Override
     public void deletarMaterial(Long id) {
-        log.info("🗑️ Deletando material com ID: {}", id);
+        log.info("Deletando material com ID: {}", id);
 
         Material material = materialRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("❌ Material não encontrado"));
 
         if (material.getArquivoId() != null) {
-            String objectPath = Material.SERVICE_NAME + "/" + material.getArquivoId(); // Usa a constante
-
-            log.info("🔄 Enviando requisição para remover o arquivo no MinIO. Caminho: {}", objectPath);
+            String objectPath = Material.SERVICE_NAME + "/" + material.getArquivoId();
+            log.info("Enviando requisição para remover o arquivo no MinIO. Caminho: {}", objectPath);
 
             try {
                 webClient.delete()
-                        .uri(MINIO_BASE_URL + "/" + objectPath) // URL do endpoint do MinIO para remoção
-                        .header("api-key", "123")
+                        .uri("/" + objectPath)
                         .retrieve()
                         .onStatus(HttpStatusCode::isError, response -> {
-                            log.error("⚠️ Erro ao remover arquivo do MinIO. Código: {}", response.statusCode().value());
+                            log.error("Erro ao remover arquivo do MinIO. Código: {}", response.statusCode().value());
                             return Mono.error(new RuntimeException("Erro ao remover material do MinIO."));
                         })
                         .toBodilessEntity()
                         .block();
-
-                log.info("✅ Arquivo removido com sucesso do MinIO. Caminho: {}", objectPath);
+                log.info("Arquivo removido com sucesso do MinIO. Caminho: {}", objectPath);
             } catch (Exception e) {
-                log.error("❌ Falha ao remover o arquivo do MinIO. Motivo: {}", e.getMessage());
+                log.error("Falha ao remover o arquivo do MinIO. Motivo: {}", e.getMessage());
                 throw new RuntimeException("Erro ao excluir arquivo do MinIO: " + e.getMessage(), e);
             }
         } else {
-            log.warn("⚠️ Nenhum arquivo associado encontrado para o material ID: {}", id);
+            log.warn("Nenhum arquivo associado encontrado para o material ID: {}", id);
         }
 
-        // Desativar material no banco de dados
+        // Desativa o material no banco de dados
         material.setAtivo(false);
         materialRepository.save(material);
-        log.info("✅ Material desativado no sistema. ID: {}", id);
+        log.info("Material desativado no sistema. ID: {}", id);
     }
-
 
 
     @Override
@@ -284,5 +284,6 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         materialRepository.save(material);
         log.info("Material ID {} associado ao mural ID {}", materialId, mural.getId());
     }
+
 
 }

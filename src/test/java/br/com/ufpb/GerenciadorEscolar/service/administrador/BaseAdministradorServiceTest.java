@@ -7,6 +7,7 @@ import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
 import br.com.ufpb.GerenciadorEscolar.service.AdministradorServiceImpl;
+import br.com.ufpb.GerenciadorEscolar.util.UsuarioUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -16,6 +17,9 @@ public abstract class BaseAdministradorServiceTest {
 
     @Mock
     protected AdministradorRepository administradorRepository;
+
+    @Mock
+    protected UsuarioUtils usuarioUtils;
 
     @Mock
     protected UserLoginRepository userLoginRepository;
@@ -35,7 +39,8 @@ public abstract class BaseAdministradorServiceTest {
                 administradorRepository,
                 passwordEncoder,
                 administradorMapper,
-                userLoginRepository
+                userLoginRepository,
+                usuarioUtils
         );
     }
 

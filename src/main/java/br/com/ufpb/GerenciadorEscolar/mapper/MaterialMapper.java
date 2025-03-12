@@ -14,11 +14,6 @@ public interface MaterialMapper {
     @Mapping(source = "professor.id", target = "professorId")
     @Mapping(source = "arquivoId", target = "urlArquivo", qualifiedByName = "mapToSignedUrl")
     MaterialResponse toResponse(Material material);
-
-    @Mapping(target = "id", ignore = true) // ID gerado pelo banco
-    @Mapping(target = "turma", ignore = true) // Turma será atribuída no service
-    @Mapping(target = "professor", ignore = true) // Professor será atribuído no service
-    @Mapping(target = "ativo", constant = "true") // Sempre começa como ativo
     Material toEntity(MaterialRequest materialRequest);
 
     @Named("mapToSignedUrl")

@@ -69,7 +69,7 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
             Professor professor = professorRepository.findById(turmaRequest.professorId())
                     .orElseThrow(() -> {
                         log.error("Professor não encontrado para o ID: {}", turmaRequest.professorId());
-                        return new RuntimeException("Professor não encontrado");
+                            return new ProfessorNaoEncontradoException("Professor não encontrado");
                     });
             turma.setProfessor(professor);
             log.info("Professor associado à turma: {}", professor.getNome());
@@ -90,7 +90,7 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         Turma turma = turmaRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Turma não encontrada para o ID: {}", id);
-                    return new RuntimeException("Turma não encontrada");
+                    return new TurmaNaoEncontradaException("Turma não encontrada");
                 });
 
         turma.setNome(turmaRequest.nome());
@@ -102,7 +102,7 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
             Professor professor = professorRepository.findById(turmaRequest.professorId())
                     .orElseThrow(() -> {
                         log.error("Professor não encontrado para o ID: {}", turmaRequest.professorId());
-                        return new RuntimeException("Professor não encontrado");
+                        return new ProfessorNaoEncontradoException("Professor não encontrado");
                     });
             turma.setProfessor(professor);
             log.info("Professor associado atualizado: {}", professor.getId());
@@ -129,13 +129,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public Optional<TurmaResponse> buscarTurmaPorId(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID da turma não pode ser nulo");
-        }
-        if (id < 0) {
-            throw new IllegalArgumentException("ID da turma não pode ser negativo");
-        }
-
         log.info("Buscando turma por ID: {}", id);
         Optional<Turma> turma = turmaRepository.findById(id);
 
@@ -147,26 +140,14 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return Optional.of(turmaMapper.toResponse(turma.get()));
     }
 
-
-
-
-
     @Override
     public void deletarTurma(Long id) {
         log.info("Deletando turma com ID: {}", id);
 
-        if (id == null) {
-            throw new IllegalArgumentException("ID da turma não pode ser nulo");
-        }
-
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID da turma não pode ser negativo");
-        }
-
         Turma turma = turmaRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Turma não encontrada para deleção com ID: {}", id);
-                    return new RuntimeException("Turma não encontrada");
+                    return new TurmaNaoEncontradaException("Turma não encontrada");
                 });
 
         if (!turma.getAlunos().isEmpty()) {
@@ -183,32 +164,22 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     public TurmaResponse matricularAluno(Long turmaId, Long alunoId) {
         log.info("Matriculando aluno com ID: {} na turma com ID: {}", alunoId, turmaId);
 
-        validarIds(turmaId, alunoId);
-
 
         Turma turma = turmaRepository.findById(turmaId)
                 .orElseThrow(() -> {
                     log.error("Turma não encontrada para matrícula com ID: {}", turmaId);
-                    return new RuntimeException("Turma não encontrada");
+                    return new TurmaNaoEncontradaException("Turma não encontrada");
                 });
 
         Aluno aluno = alunoRepository.findById(alunoId)
                 .orElseThrow(() -> {
                     log.error("Aluno não encontrado para matrícula com ID: {}", alunoId);
-                    return new RuntimeException("Aluno não encontrado");
+                    return new AlunoNaoEncontradoException("Aluno não encontrado");
                 });
-
-        //VERIFICAR SE É ASSIM MESMO
-        if (turma.getAlunos() == null) {
-            turma.setAlunos(new ArrayList<>());
-        }
-        if (aluno.getTurmas() == null) {
-            aluno.setTurmas(new ArrayList<>());
-        }
 
         if (turma.getAlunos().size() >= turma.getTamanhoMaximo()) {
             log.warn("A turma com ID: {} já atingiu o tamanho máximo de alunos", turmaId);
-            throw new RuntimeException("A turma já atingiu o tamanho máximo de alunos.");
+            throw new TurmaLotadaException("A turma já atingiu o tamanho máximo de alunos.");
         }
 
         if (!turma.getAlunos().contains(aluno)) {
@@ -227,15 +198,8 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     public Page<AlunoResponse> listarAlunosPorTurma(Long turmaId, Pageable pageable) {
         log.info("Listando alunos da turma com ID: {} com paginação: {}", turmaId, pageable);
 
-        if (turmaId == null) {
-            throw new IllegalArgumentException("ID da turma não pode ser nulo");
-        }
-        if (turmaId < 0) {
-            throw new IllegalArgumentException("ID da turma não pode ser negativo");
-        }
-
         if (!turmaRepository.existsById(turmaId)) {
-            throw new RuntimeException("Turma não encontrada");
+            throw new TurmaNaoEncontradaException("Turma não encontrada");
         }
 
         return alunoRepository.findByTurmasId(turmaId, pageable)
@@ -244,8 +208,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public void removerAlunoDaTurma(Long turmaId, Long alunoId) {
-        validarIds(turmaId, alunoId);
-
         log.info("Removendo aluno com ID: {} da turma com ID: {}", alunoId, turmaId);
 
         // Busca turma e aluno diretamente, lançando exceção caso não existam
@@ -270,12 +232,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public Page<TurmaResponse> listarTurmasPorAluno(Long alunoId, Pageable pageable) {
-        if (alunoId == null) {
-            throw new NullPointerException("ID do aluno não pode ser nulo");
-        }
-        if (alunoId < 0) {
-            throw new IllegalArgumentException("ID do aluno não pode ser negativo");
-        }
         log.info("Listando turmas para aluno ID: {} com paginação: {}", alunoId, pageable);
         Page<Turma> turmas = turmaRepository.findByAlunosIdAndAtivoTrue(alunoId, pageable);
         log.info("Total de turmas encontradas para aluno {}: {}", alunoId, turmas.getContent().size());
@@ -284,12 +240,6 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
 
     @Override
     public Page<TurmaResponse> listarTurmasPorProfessor(Long professorId, Pageable pageable) {
-        if (professorId == null) {
-            throw new NullPointerException("ID do aluno não pode ser nulo");
-        }
-        if (professorId < 0) {
-            throw new IllegalArgumentException("ID do aluno não pode ser negativo");
-        }
         log.info("Listando turmas para professor ID: {} com paginação: {}", professorId, pageable);
         Page<Turma> turmas = turmaRepository.findByProfessorIdAndAtivoTrue(professorId, pageable);
         log.info("Total de turmas encontradas para professor {}: {}", professorId, turmas.getContent().size());
@@ -302,15 +252,5 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         Page<Turma> turmas = turmaRepository.findAll(pageable);
         log.info("Total de turmas encontradas: {}", turmas.getTotalElements());
         return turmas.map(turmaMapper::toResponse);
-    }
-
-
-    private void validarIds(Long turmaId, Long alunoId) {
-        if (turmaId == null || alunoId == null) {
-            throw new NullPointerException("ID não pode ser nulo");
-        }
-        if (turmaId < 0 || alunoId < 0) {
-            throw new IllegalArgumentException("ID não pode ser negativo");
-        }
     }
 }

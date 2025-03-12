@@ -14,12 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @Slf4j
 public class AdministradorServiceImpl implements AdministradorServiceInterface {
 
+    private final UsuarioUtils usuarioUtils;
     private final AdministradorRepository administradorRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdministradorMapper administradorMapper;
@@ -28,11 +27,13 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     public AdministradorServiceImpl(AdministradorRepository administradorRepository,
                                     PasswordEncoder passwordEncoder,
                                     AdministradorMapper administradorMapper,
-                                    UserLoginRepository userLoginRepository) {
+                                    UserLoginRepository userLoginRepository,
+                                    UsuarioUtils usuarioUtils) {
         this.administradorRepository = administradorRepository;
         this.passwordEncoder = passwordEncoder;
         this.administradorMapper = administradorMapper;
         this.userLoginRepository = userLoginRepository;
+        this.usuarioUtils = usuarioUtils;
     }
 
     @Override
@@ -78,7 +79,6 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
     @Override
     public AdministradorResponse buscarAdministradorPorId(Long id) {
         log.info("Buscando administrador por ID: {}", id);
-
         Administrador admin = administradorRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> {
                     log.warn("Administrador não encontrado para o ID: {}", id);
@@ -97,9 +97,9 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                 .orElseThrow(() -> new AdministradorNaoEncontradoException("Administrador não encontrado ou inativo."));
 
         UserLogin userLogin = userLoginRepository.findByUsuarioAndAtivoTrue(admin)
-                .orElseThrow(() -> new AdministradorNaoEncontradoException("Login não encontrado para o Administrador"));
+                .orElseThrow(() -> new LoginNaoEncontradoException("Login não encontrado para o Administrador"));
 
-        boolean dadosAlterados = UsuarioUtils.atualizarDadosUsuario(
+        boolean dadosAlterados = usuarioUtils.atualizarDadosUsuario(
                 admin,
                 userLogin,
                 administradorRequest.nome(),
@@ -109,12 +109,21 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                 passwordEncoder
         );
 
+        if (administradorRequest.setor() != null && !administradorRequest.setor().equals(admin.getSetor())) {
+            admin.setSetor(administradorRequest.setor());
+            dadosAlterados = true;
+        }
+
+        if (administradorRequest.siape() != null && !administradorRequest.siape().equals(admin.getSiape())) {
+            admin.setSiape(administradorRequest.siape());
+            dadosAlterados = true;
+        }
+
         if (!dadosAlterados) {
             throw new NenhumaAlteracaoRealizadaException();
         }
 
         administradorRepository.save(admin);
-        userLogin.setEmail(admin.getEmail());
         userLoginRepository.save(userLogin);
 
         log.info("Administrador atualizado com sucesso. ID: {}", admin.getId());

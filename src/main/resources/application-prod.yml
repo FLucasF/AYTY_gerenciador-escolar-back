@@ -1,6 +1,16 @@
-app:
-  token:
-    key: ${JWT_KEY:"sua_chave_secreta_super_segura"}
+jwt:
+  access:
+    secret: ${JWT_ACCESS_SECRET:"sua_chave_acesso_super_segura"}
+  refresh:
+    secret: ${JWT_REFRESH_SECRET:"sua_chave_refresh_super_segura"} #fazer usar
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000} # Expiração do refresh token (7 dias em milissegundos)
+
+
+minio:
+  base:
+    url: ${MINIO_API_URL:http://localhost:8080/api/media}
+  api:
+    key: ${MINIO_API_KEY:123}
 
 spring:
   datasource:
