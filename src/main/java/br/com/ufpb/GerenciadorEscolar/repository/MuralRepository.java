@@ -1,6 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.repository;
 
-import br.com.ufpb.GerenciadorEscolar.model.Mural;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Mural;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

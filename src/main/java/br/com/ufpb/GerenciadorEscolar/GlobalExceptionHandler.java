@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar;
 
-import br.com.ufpb.GerenciadorEscolar.dto.ApiError;
-import br.com.ufpb.GerenciadorEscolar.security.AuthenticationFailedException;
+import br.com.ufpb.GerenciadorEscolar.model.dto.ApiError;
+import br.com.ufpb.GerenciadorEscolar.security.jwt.AuthenticationFailedException;
 import br.com.ufpb.GerenciadorEscolar.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;

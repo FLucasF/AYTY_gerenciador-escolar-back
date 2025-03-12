@@ -1,8 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.mapper;
 
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

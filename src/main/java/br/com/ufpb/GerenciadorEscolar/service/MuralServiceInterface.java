@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.mural.MuralRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.mural.MuralResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;

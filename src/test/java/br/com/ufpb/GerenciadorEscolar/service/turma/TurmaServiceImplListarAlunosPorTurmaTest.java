@@ -1,8 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.service.turma;
 
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
+import br.com.ufpb.GerenciadorEscolar.model.dto.aluno.AlunoResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Aluno;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.*;
 

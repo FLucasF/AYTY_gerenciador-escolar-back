@@ -1,12 +1,9 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.Optional;
 
 public interface AdministradorServiceInterface {
 

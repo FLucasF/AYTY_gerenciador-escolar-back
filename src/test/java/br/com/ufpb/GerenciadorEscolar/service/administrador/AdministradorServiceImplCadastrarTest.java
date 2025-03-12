@@ -1,9 +1,9 @@
 package br.com.ufpb.GerenciadorEscolar.service.administrador;
 
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.service.CpfJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;

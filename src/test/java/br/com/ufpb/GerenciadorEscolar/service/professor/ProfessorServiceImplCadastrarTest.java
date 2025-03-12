@@ -1,9 +1,9 @@
 package br.com.ufpb.GerenciadorEscolar.service.professor;
 
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.service.CpfJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;

@@ -3,10 +3,10 @@
 //import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialRequest;
 //import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialResponse;
 //import br.com.ufpb.GerenciadorEscolar.service.MinioException;
-//import br.com.ufpb.GerenciadorEscolar.model.Material;
-//import br.com.ufpb.GerenciadorEscolar.model.Professor;
-//import br.com.ufpb.GerenciadorEscolar.model.Turma;
-//import br.com.ufpb.GerenciadorEscolar.model.TipoArquivo;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Material;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.TipoArquivo;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.http.HttpStatus;
 //import org.springframework.http.MediaType;

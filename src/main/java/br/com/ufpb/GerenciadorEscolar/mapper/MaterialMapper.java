@@ -1,8 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.mapper;
 
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Material;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Material;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

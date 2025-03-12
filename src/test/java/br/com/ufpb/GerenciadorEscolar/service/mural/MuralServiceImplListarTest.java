@@ -1,7 +1,7 @@
 //package br.com.ufpb.GerenciadorEscolar.service.mural;
 //
 //import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
-//import br.com.ufpb.GerenciadorEscolar.model.Mural;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Mural;
 //import org.junit.jupiter.api.Test;
 //import org.mockito.ArgumentCaptor;
 //import org.springframework.data.domain.*;

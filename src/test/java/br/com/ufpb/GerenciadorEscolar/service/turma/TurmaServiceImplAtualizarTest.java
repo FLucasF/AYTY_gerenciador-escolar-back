@@ -1,9 +1,9 @@
 package br.com.ufpb.GerenciadorEscolar.service.turma;
 
-import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
+import br.com.ufpb.GerenciadorEscolar.model.dto.turma.TurmaRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.turma.TurmaResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

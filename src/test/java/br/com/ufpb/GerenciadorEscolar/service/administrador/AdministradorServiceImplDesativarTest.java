@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.service.administrador;
 
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.service.AdministradorNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

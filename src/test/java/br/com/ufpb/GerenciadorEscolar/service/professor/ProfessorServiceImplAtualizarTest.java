@@ -2,8 +2,8 @@
 //
 //import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
 //import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
-//import br.com.ufpb.GerenciadorEscolar.model.Professor;
-//import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 //import br.com.ufpb.GerenciadorEscolar.service.ProfessorNaoEncontradoException;
 //import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
 //import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;

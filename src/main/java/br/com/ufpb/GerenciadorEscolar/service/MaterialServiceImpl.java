@@ -1,12 +1,13 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.minio.MinioResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.minio.MinioResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.MaterialMapper;
-import br.com.ufpb.GerenciadorEscolar.model.Material;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Material;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Mural;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
 import br.com.ufpb.GerenciadorEscolar.repository.MaterialRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
@@ -276,7 +277,7 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
 
 
     @Override
-    public void associarMaterialAoMural(Long materialId, br.com.ufpb.GerenciadorEscolar.model.Mural mural) {
+    public void associarMaterialAoMural(Long materialId, Mural mural) {
         log.info("Associando material ID {} ao mural ID {}", materialId, mural.getId());
         Material material = materialRepository.findById(materialId)
                 .orElseThrow(() -> new RuntimeException("Material não encontrado para associação"));

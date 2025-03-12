@@ -3,9 +3,9 @@
 //import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
 //import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
 //import br.com.ufpb.GerenciadorEscolar.mapper.MuralMapper;
-//import br.com.ufpb.GerenciadorEscolar.model.Mural;
-//import br.com.ufpb.GerenciadorEscolar.model.Professor;
-//import br.com.ufpb.GerenciadorEscolar.model.Turma;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Mural;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
 //import br.com.ufpb.GerenciadorEscolar.repository.MuralRepository;
 //import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 //import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;

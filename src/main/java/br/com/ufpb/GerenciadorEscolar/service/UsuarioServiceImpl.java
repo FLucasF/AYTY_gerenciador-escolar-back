@@ -1,6 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.usuario.UsuarioResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.usuario.UsuarioResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.UsuarioMapper;
 import br.com.ufpb.GerenciadorEscolar.repository.UsuarioRepository;
 import lombok.extern.slf4j.Slf4j;

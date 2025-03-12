@@ -1,12 +1,11 @@
 package br.com.ufpb.GerenciadorEscolar;
 
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorRequest;
 import br.com.ufpb.GerenciadorEscolar.service.AdministradorServiceImpl;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class GerenciadorEscolarApplication {
@@ -19,6 +18,7 @@ public class GerenciadorEscolarApplication {
 	public CommandLineRunner loadAdmin(AdministradorServiceImpl administradorService) {
 		return args -> {
 			try {
+				// Tente cadastrar o administrador. Se já existir, ele vai lançar uma exceção.
 				administradorService.cadastrarAdministrador(new AdministradorRequest(
 						"Administrador",  // Nome
 						"admin@dominio.com",  // Email
@@ -33,4 +33,5 @@ public class GerenciadorEscolarApplication {
 			}
 		};
 	}
+
 }

@@ -1,7 +1,7 @@
 //package br.com.ufpb.GerenciadorEscolar.service.material;
 //
 //import br.com.ufpb.GerenciadorEscolar.service.MinioException;
-//import br.com.ufpb.GerenciadorEscolar.model.Material;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Material;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.http.HttpStatus;
 //import reactor.core.publisher.Mono;

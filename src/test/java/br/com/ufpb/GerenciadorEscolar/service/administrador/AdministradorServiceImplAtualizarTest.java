@@ -2,8 +2,8 @@
 //
 //import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
 //import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
-//import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-//import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Administrador;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 //import br.com.ufpb.GerenciadorEscolar.service.NenhumaAlteracaoRealizadaException;
 //import br.com.ufpb.GerenciadorEscolar.service.AdministradorNaoEncontradoException;
 //import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;

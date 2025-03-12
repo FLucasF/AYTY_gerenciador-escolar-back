@@ -1,10 +1,10 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.ProfessorMapper;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
 import br.com.ufpb.GerenciadorEscolar.util.UsuarioUtils;
@@ -13,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @Slf4j

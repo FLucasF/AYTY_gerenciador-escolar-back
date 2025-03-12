@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.aluno.AlunoRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.aluno.AlunoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.service.aluno;
 
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Aluno;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.service.AlunoNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 

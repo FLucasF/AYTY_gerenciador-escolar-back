@@ -2,8 +2,8 @@
 //
 //import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoRequest;
 //import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-//import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-//import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Aluno;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 //import br.com.ufpb.GerenciadorEscolar.service.AlunoNaoEncontradoException;
 //import br.com.ufpb.GerenciadorEscolar.service.NenhumaAlteracaoRealizadaException;
 //import org.junit.jupiter.api.Test;

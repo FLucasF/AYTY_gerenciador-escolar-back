@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.util;
 
-import br.com.ufpb.GerenciadorEscolar.model.Usuario;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Usuario;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.UsuarioRepository;
 import br.com.ufpb.GerenciadorEscolar.service.CpfJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;

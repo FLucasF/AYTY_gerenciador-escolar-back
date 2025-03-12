@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.service.professor;
 
-import br.com.ufpb.GerenciadorEscolar.dto.professor.ProfessorResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

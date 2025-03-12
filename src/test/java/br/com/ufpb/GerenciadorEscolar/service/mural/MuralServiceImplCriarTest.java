@@ -4,9 +4,9 @@
 //import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
 //import br.com.ufpb.GerenciadorEscolar.service.TurmaNaoEncontradaException;
 //import br.com.ufpb.GerenciadorEscolar.service.ProfessorNaoEncontradoException;
-//import br.com.ufpb.GerenciadorEscolar.model.Mural;
-//import br.com.ufpb.GerenciadorEscolar.model.Turma;
-//import br.com.ufpb.GerenciadorEscolar.model.Professor;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Mural;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
+//import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
 //import org.junit.jupiter.api.Test;
 //
 //import java.util.Optional;

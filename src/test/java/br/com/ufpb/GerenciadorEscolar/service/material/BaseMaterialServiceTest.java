@@ -1,12 +1,12 @@
 package br.com.ufpb.GerenciadorEscolar.service.material;
 
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.MaterialMapper;
-import br.com.ufpb.GerenciadorEscolar.model.Material;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
-import br.com.ufpb.GerenciadorEscolar.model.TipoArquivo;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Material;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
+import br.com.ufpb.GerenciadorEscolar.model.entity.TipoArquivo;
 import br.com.ufpb.GerenciadorEscolar.repository.MaterialRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
@@ -15,7 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;

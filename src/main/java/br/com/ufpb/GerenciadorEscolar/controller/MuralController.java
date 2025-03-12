@@ -1,8 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.mural.MuralResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.ApiError;
+import br.com.ufpb.GerenciadorEscolar.model.dto.mural.MuralRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.mural.MuralResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.ApiError;
 import br.com.ufpb.GerenciadorEscolar.service.MuralServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

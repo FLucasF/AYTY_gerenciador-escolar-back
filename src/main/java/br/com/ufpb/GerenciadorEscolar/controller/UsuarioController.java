@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.dto.usuario.UsuarioResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.ApiError;
+import br.com.ufpb.GerenciadorEscolar.model.dto.usuario.UsuarioResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.ApiError;
 import br.com.ufpb.GerenciadorEscolar.service.UsuarioServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

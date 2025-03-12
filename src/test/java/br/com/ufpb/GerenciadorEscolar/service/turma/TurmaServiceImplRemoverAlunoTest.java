@@ -1,13 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.service.turma;
 
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
-import jakarta.validation.constraints.Null;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Aluno;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;

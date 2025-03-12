@@ -1,10 +1,10 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.material.MaterialResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.material.MaterialResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import br.com.ufpb.GerenciadorEscolar.model.Mural;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Mural;
 
 public interface MaterialServiceInterface {
 

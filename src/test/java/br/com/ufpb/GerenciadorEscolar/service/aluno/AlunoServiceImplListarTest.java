@@ -1,9 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.service.aluno;
 
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
+import br.com.ufpb.GerenciadorEscolar.model.dto.aluno.AlunoResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Aluno;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;

@@ -1,9 +1,9 @@
 package br.com.ufpb.GerenciadorEscolar.controller;
 
-import br.com.ufpb.GerenciadorEscolar.dto.aluno.AlunoResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaResponse;
-import br.com.ufpb.GerenciadorEscolar.dto.ApiError;
+import br.com.ufpb.GerenciadorEscolar.model.dto.aluno.AlunoResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.turma.TurmaRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.turma.TurmaResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.ApiError;
 import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceInterface;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,9 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

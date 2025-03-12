@@ -1,10 +1,10 @@
 package br.com.ufpb.GerenciadorEscolar.service;
 
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.AdministradorMapper;
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.repository.AdministradorRepository;
 import br.com.ufpb.GerenciadorEscolar.repository.UserLoginRepository;
 import br.com.ufpb.GerenciadorEscolar.util.UsuarioUtils;

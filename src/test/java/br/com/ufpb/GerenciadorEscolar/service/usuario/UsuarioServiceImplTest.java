@@ -1,11 +1,11 @@
 package br.com.ufpb.GerenciadorEscolar.service.usuario;
 
-import br.com.ufpb.GerenciadorEscolar.dto.usuario.UsuarioResponse;
+import br.com.ufpb.GerenciadorEscolar.model.dto.usuario.UsuarioResponse;
 import br.com.ufpb.GerenciadorEscolar.mapper.UsuarioMapper;
-import br.com.ufpb.GerenciadorEscolar.model.Administrador;
-import br.com.ufpb.GerenciadorEscolar.model.Aluno;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.Usuario;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Administrador;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Aluno;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Usuario;
 import br.com.ufpb.GerenciadorEscolar.repository.UsuarioRepository;
 import br.com.ufpb.GerenciadorEscolar.service.UsuarioServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

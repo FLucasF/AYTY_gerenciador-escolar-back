@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.service.professor;
 
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
 import br.com.ufpb.GerenciadorEscolar.service.ProfessorNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 

@@ -1,18 +1,10 @@
 package br.com.ufpb.GerenciadorEscolar.service.turma;
 
-import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaRequest;
-import br.com.ufpb.GerenciadorEscolar.dto.turma.TurmaResponse;
-import br.com.ufpb.GerenciadorEscolar.mapper.TurmaMapper;
-import br.com.ufpb.GerenciadorEscolar.model.Professor;
-import br.com.ufpb.GerenciadorEscolar.model.Turma;
-import br.com.ufpb.GerenciadorEscolar.repository.ProfessorRepository;
-import br.com.ufpb.GerenciadorEscolar.repository.TurmaRepository;
-import br.com.ufpb.GerenciadorEscolar.service.TurmaServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
+import br.com.ufpb.GerenciadorEscolar.model.dto.turma.TurmaRequest;
+import br.com.ufpb.GerenciadorEscolar.model.dto.turma.TurmaResponse;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Professor;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Turma;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 

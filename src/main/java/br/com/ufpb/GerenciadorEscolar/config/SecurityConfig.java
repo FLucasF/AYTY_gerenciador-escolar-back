@@ -1,7 +1,7 @@
 package br.com.ufpb.GerenciadorEscolar.config;
 
-import br.com.ufpb.GerenciadorEscolar.security.JwtAuthenticationFilter;
-import br.com.ufpb.GerenciadorEscolar.security.UserDetailsServiceImpl;
+import br.com.ufpb.GerenciadorEscolar.security.jwt.JwtAuthenticationFilter;
+import br.com.ufpb.GerenciadorEscolar.security.jwt.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
