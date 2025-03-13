@@ -1,7 +1,9 @@
 jwt:
   access:
-    secret: ${JWT_ACCESS_SECRET:"sua_chave_acesso_super_segura"}
-
+    secret: ${JWT_ACCESS_SECRET:7f0d1362681fe83281e3a132f2b5bf67}
+crypto:
+  key: ${CRYPTO_KEY:e0e1f1c5366c7cbd}
+  algorithm: ${CRYPTO_ALGORITHM:AES}
 
 minio:
   base:

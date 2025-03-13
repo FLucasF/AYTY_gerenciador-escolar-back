@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model.entity;
 
+import br.com.ufpb.GerenciadorEscolar.util.CryptoConverter;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
@@ -11,6 +12,7 @@ public class Professor extends Usuario {
 
     private String departamento;
 
+    @Convert(converter = CryptoConverter.class)
     private String siape;
 
     @JsonManagedReference

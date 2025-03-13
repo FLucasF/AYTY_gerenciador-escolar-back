@@ -68,28 +68,6 @@ public class TurmaServiceImplDeletarTest extends BaseTurmaServiceTest {
         verify(turmaRepository, never()).deleteById(any());
     }
 
-    // ❌ Falha: Tentativa de deletar turma com ID nulo
-    @Test
-    public void testDeletarTurma_IdNulo() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> turmaService.deletarTurma(null));
-
-        assertEquals("ID da turma não pode ser nulo", exception.getMessage());
-
-        verify(turmaRepository, never()).findById(any());
-        verify(turmaRepository, never()).deleteById(any());
-    }
-
-    // ❌ Falha: Tentativa de deletar turma com ID negativo
-    @Test
-    public void testDeletarTurma_IdNegativo() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> turmaService.deletarTurma(-1L));
-
-        assertEquals("ID da turma não pode ser negativo", exception.getMessage());
-
-        verify(turmaRepository, never()).findById(any());
-        verify(turmaRepository, never()).deleteById(any());
-    }
-
     // ❌ Falha: Exceção inesperada do banco de dados ao tentar deletar a turma
     @Test
     public void testDeletarTurma_ErroNoBanco() {

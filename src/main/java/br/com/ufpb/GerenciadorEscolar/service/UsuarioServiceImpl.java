@@ -22,12 +22,24 @@ public class UsuarioServiceImpl implements UsuarioServiceInterface {
         this.usuarioMapper = usuarioMapper;
     }
 
+    /**
+     * Listar usuários ativos com paginação.
+     *
+     * Este método recupera uma lista paginada de usuários ativos no sistema.
+     *
+     * @param pageable - Objeto `Pageable` contendo as informações de paginação (página, tamanho, ordenação).
+     * @return Page<UsuarioResponse> - Retorna uma página contendo os usuários ativos no formato `UsuarioResponse`.
+     */
     @Override
     public Page<UsuarioResponse> listarUsuarios(Pageable pageable) {
         log.info("Iniciando listagem de usuários ativos com paginação: {}", pageable);
+
+        // Recupera os usuários ativos do banco de dados e converte para DTOs `UsuarioResponse`
         Page<UsuarioResponse> usuariosPage = usuarioRepository.findByAtivoTrue(pageable)
                 .map(usuarioMapper::toResponse);
+
         log.info("Listagem concluída. Total de usuários ativos encontrados: {}", usuariosPage.getTotalElements());
+
         return usuariosPage;
     }
 }

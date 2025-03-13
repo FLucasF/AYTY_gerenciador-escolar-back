@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface MuralRepository extends JpaRepository<Mural, Long> {
 
     Page<Mural> findByTurmaIdAndAtivoTrue(Long turmaId, Pageable pageable);
+
     Optional<Mural> findByIdAndAtivoTrue(Long id);
 
 }

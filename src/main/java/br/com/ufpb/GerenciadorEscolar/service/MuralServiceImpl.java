@@ -44,6 +44,18 @@ public class MuralServiceImpl implements MuralServiceInterface {
         this.materialService = materialService;
     }
 
+    /**
+     * Criar uma nova postagem no mural.
+     *
+     * Este método cria uma postagem associada a uma turma e a um professor, podendo conter uma imagem opcional.
+     *
+     * @param muralRequest - Objeto contendo os dados da nova postagem no mural.
+     * @param imagem - Arquivo opcional representando uma imagem para a postagem.
+     * @return MuralResponse - Retorna os dados da postagem criada no formato de resposta.
+     * @throws TurmaNaoEncontradaException - Se a turma associada não for encontrada.
+     * @throws ProfessorNaoEncontradoException - Se o professor responsável não for encontrado.
+     * @throws RuntimeException - Se ocorrer um erro no processamento da imagem.
+     */
     @Override
     public MuralResponse criarPostagem(MuralRequest muralRequest, MultipartFile imagem) {
         log.info("Criando nova postagem no mural para Turma ID: {} e Professor ID: {}",
@@ -130,9 +142,16 @@ public class MuralServiceImpl implements MuralServiceInterface {
         );
     }
 
+    /**
+     * Buscar uma postagem no mural pelo ID.
+     *
+     * @param id - ID da postagem a ser buscada.
+     * @return MuralResponse - Retorna os dados da postagem encontrada.
+     * @throws PostagemNaoEncontradaException - Se a postagem não for encontrada.
+     */
     @Override
     public MuralResponse buscarPostagemPorId(Long id) {
-        log.info("🔍 Buscando postagem no mural com ID: {}", id);
+        log.info("Buscando postagem no mural com ID: {}", id);
         Mural mural = muralRepository.findById(id)
                 .orElseThrow(() -> new PostagemNaoEncontradaException("Postagem não encontrada"));
         log.info("Postagem encontrada: ID {}", mural.getId());
@@ -159,9 +178,16 @@ public class MuralServiceImpl implements MuralServiceInterface {
         );
     }
 
+    /**
+     * Listar postagens de um mural por turma.
+     *
+     * @param idTurma - ID da turma cujas postagens serão listadas.
+     * @param pageable - Objeto `Pageable` contendo as informações de paginação.
+     * @return Page<MuralResponse> - Retorna uma página contendo as postagens da turma.
+     */
     @Override
     public Page<MuralResponse> listarPostagensPorTurma(Long idTurma, Pageable pageable) {
-        log.info("📌 Listando postagens para Turma ID: {} com paginação: {}", idTurma, pageable);
+        log.info("Listando postagens para Turma ID: {} com paginação: {}", idTurma, pageable);
         Page<MuralResponse> responses = muralRepository.findByTurmaIdAndAtivoTrue(idTurma, pageable)
                 .map(mural -> {
                     String imagemUrl = null;
@@ -187,24 +213,30 @@ public class MuralServiceImpl implements MuralServiceInterface {
         return responses;
     }
 
+    /**
+     * Deletar uma postagem do mural.
+     *
+     * @param id - ID da postagem a ser deletada.
+     * @throws PostagemNaoEncontradaException - Se a postagem não for encontrada.
+     */
     @Override
     public void deletarPostagem(Long id) {
-        log.info("🗑️ Desativando postagem no mural com ID: {}", id);
+        log.info("Desativando postagem no mural com ID: {}", id);
         Mural mural = muralRepository.findByIdAndAtivoTrue(id)
                 .orElseThrow(() -> new PostagemNaoEncontradaException("Postagem não encontrada"));
 
         if (mural.getImagemId() != null) {
-            log.info("🔄 Removendo material associado à imagem no MinIO, ID: {}", mural.getImagemId());
+            log.info("Removendo material associado à imagem no MinIO, ID: {}", mural.getImagemId());
             try {
                 materialService.deletarMaterial(mural.getImagemId()); // Agora só precisa passar o ID
             } catch (Exception e) {
-                log.error("❌ Erro ao excluir a mídia no MinIO: {}", e.getMessage());
+                log.error("Erro ao excluir a mídia no MinIO: {}", e.getMessage());
             }
         }
 
         mural.setAtivo(false);
         muralRepository.save(mural);
-        log.info("✅ Postagem desativada com sucesso. ID: {}", id);
+        log.info("Postagem desativada com sucesso. ID: {}", id);
     }
 
 }

@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model.entity;
 
+import br.com.ufpb.GerenciadorEscolar.util.CryptoConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -9,6 +10,7 @@ import jakarta.persistence.Table;
 public class Administrador extends Usuario {
     private String setor;
 
+    @Convert(converter = CryptoConverter.class)
     private String siape;
 
     public Administrador() {

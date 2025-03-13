@@ -1,22 +1,32 @@
+version: '3.8'
+
+networks:
+  minio_network:
+    external: true  # Usa a rede já criada manualmente
+
 services:
   db:
     image: mysql:8.0
-    container_name: mysql_gerenciador
-    command: --default-authentication-plugin=mysql_native_password
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: gerenciador_escolar
-      MYSQL_USER: escola
-      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: '123456'
+      MYSQL_ROOT_PASSWORD: '123456'
     ports:
       - '3307:3306'
+    expose:
+      - '3306'
     volumes:
-      - mysql_data:/var/lib/mysql
+      - my-db:/var/lib/mysql  # Usando o volume nomeado "my-db"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 5s
-      timeout: 10s
-      retries: 10
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    networks:
+      - minio_network  # Conecta à mesma rede do MinIO
 
   backend:
     build: .
@@ -25,11 +35,15 @@ services:
       - "8090:8090"
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/gerenciador_escolar?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
-      SPRING_DATASOURCE_USERNAME: escola
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 123456
       APP_TOKEN_KEY: "sua_chave_secreta_super_segura"
     depends_on:
       db:
         condition: service_healthy
-    restart: on-failure
+    networks:
+      - minio_network  # Conecta à mesma rede do MinIO
+
+volumes:
+  my-db:

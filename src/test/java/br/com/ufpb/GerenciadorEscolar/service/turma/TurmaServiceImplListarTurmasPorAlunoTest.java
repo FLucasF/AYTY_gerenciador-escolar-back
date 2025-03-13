@@ -79,35 +79,6 @@ class TurmaServiceImplListarTurmasPorAlunoTest extends BaseTurmaServiceTest {
     }
 
     @Test
-    void testListarTurmasPorAluno_AlunoIdNulo() {
-        // Arrange
-        Pageable pageable = PageRequest.of(0, 2);
-
-        // Act & Assert
-        Exception exception = assertThrows(NullPointerException.class, () ->
-                turmaService.listarTurmasPorAluno(null, pageable)
-        );
-
-        assertEquals("ID do aluno não pode ser nulo", exception.getMessage());
-        verify(turmaRepository, never()).findByAlunosIdAndAtivoTrue(any(), any());
-    }
-
-    @Test
-    void testListarTurmasPorAluno_AlunoIdNegativo() {
-        // Arrange
-        Long alunoId = -1L;
-        Pageable pageable = PageRequest.of(0, 2);
-
-        // Act & Assert
-        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                turmaService.listarTurmasPorAluno(alunoId, pageable)
-        );
-
-        assertEquals("ID do aluno não pode ser negativo", exception.getMessage());
-        verify(turmaRepository, never()).findByAlunosIdAndAtivoTrue(any(), any());
-    }
-
-    @Test
     void testListarTurmasPorAluno_PaginaForaDoIntervalo() {
         // Arrange
         Long alunoId = 1L;

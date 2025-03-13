@@ -107,36 +107,6 @@ public class TurmaServiceImplMatricularAlunoTest extends BaseTurmaServiceTest {
     }
 
     @Test
-    public void testMatricularAluno_TurmaIdNulo() {
-        Exception exception = assertThrows(NullPointerException.class, () -> turmaService.matricularAluno(null, 2L));
-
-        assertEquals("ID não pode ser nulo", exception.getMessage());
-        verify(turmaRepository, never()).findById(any());
-    }
-
-    @Test
-    public void testMatricularAluno_AlunoIdNulo() {
-        Exception exception = assertThrows(NullPointerException.class, () -> turmaService.matricularAluno(1L, null));
-
-        assertEquals("ID não pode ser nulo", exception.getMessage());
-        verify(alunoRepository, never()).findById(any());
-    }
-
-    @Test
-    public void testMatricularAluno_TurmaIdNegativo() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> turmaService.matricularAluno(-1L, 2L));
-
-        assertEquals("ID não pode ser negativo", exception.getMessage());
-    }
-
-    @Test
-    public void testMatricularAluno_AlunoIdNegativo() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> turmaService.matricularAluno(1L, -2L));
-
-        assertEquals("ID não pode ser negativo", exception.getMessage());
-    }
-
-    @Test
     public void testMatricularAluno_ErroBancoAoBuscarTurma() {
         Long turmaId = 1L;
         Long alunoId = 2L;

@@ -4,10 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Resposta contendo os dados do professor.")
 public record ProfessorResponse(
-
-        @Schema(description = "Tipo do usuário.", example = "ALUNO")
-        String tipo,
-
         @Schema(description = "Identificador único do professor.", example = "1")
         Long id,
 

@@ -36,6 +36,18 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         this.usuarioUtils = usuarioUtils;
     }
 
+    /**
+     * Cadastrar um novo administrador.
+     *
+     * Este método verifica se o administrador já existe no banco de dados, valida suas credenciais
+     * e realiza o cadastro do administrador e seu login no sistema.
+     *
+     * @param administradorRequest - Objeto contendo os dados do administrador a ser cadastrado.
+     * @return AdministradorResponse - Retorna os dados do administrador cadastrado no formato de resposta.
+     * @throws EmailJaCadastradoException - Se já existir um administrador com o mesmo e-mail.
+     * @throws CpfJaCadastradoException - Se já existir um administrador com o mesmo CPF.
+     * @throws SiapeJaCadastradoException - Se já existir um administrador com o mesmo SIAPE.
+     */
     @Override
     public AdministradorResponse cadastrarAdministrador(AdministradorRequest administradorRequest) {
         log.info("Iniciando cadastro de administrador: {}", administradorRequest.email());
@@ -68,7 +80,14 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         return administradorMapper.toResponse(admin);
     }
 
-
+    /**
+     * Listar administradores ativos com paginação.
+     *
+     * Este método retorna uma lista paginada de administradores que estão ativos no sistema.
+     *
+     * @param pageable - Objeto `Pageable` contendo as informações de paginação.
+     * @return Page<AdministradorResponse> - Retorna uma página contendo os administradores ativos.
+     */
     @Override
     public Page<AdministradorResponse> listarAdministradoresAtivos(Pageable pageable) {
         log.info("Listando administradores ativos com paginação: {}", pageable);
@@ -76,6 +95,15 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
                 .map(administradorMapper::toResponse);
     }
 
+    /**
+     * Buscar um administrador pelo ID.
+     *
+     * Este método recupera um administrador ativo no sistema a partir do seu ID.
+     *
+     * @param id - ID do administrador a ser buscado.
+     * @return AdministradorResponse - Retorna os dados do administrador no formato de resposta.
+     * @throws AdministradorNaoEncontradoException - Se o administrador não for encontrado.
+     */
     @Override
     public AdministradorResponse buscarAdministradorPorId(Long id) {
         log.info("Buscando administrador por ID: {}", id);
@@ -88,7 +116,18 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         return administradorMapper.toResponse(admin);
     }
 
-
+    /**
+     * Atualizar as informações de um administrador.
+     *
+     * Este método permite atualizar os dados de um administrador ativo no sistema, garantindo a
+     * consistência dos dados e verificando a duplicidade de informações sensíveis como e-mail, CPF e SIAPE.
+     *
+     * @param id - ID do administrador que será atualizado.
+     * @param administradorRequest - Objeto contendo os novos dados do administrador.
+     * @return AdministradorResponse - Retorna os dados do administrador atualizado no formato de resposta.
+     * @throws AdministradorNaoEncontradoException - Se o administrador não for encontrado ou estiver inativo.
+     * @throws NenhumaAlteracaoRealizadaException - Se nenhuma alteração foi feita nos dados do administrador.
+     */
     @Override
     public AdministradorResponse atualizarAdministrador(Long id, AdministradorRequest administradorRequest) {
         log.info("Atualizando administrador com ID: {}", id);
@@ -130,7 +169,14 @@ public class AdministradorServiceImpl implements AdministradorServiceInterface {
         return administradorMapper.toResponse(admin);
     }
 
-
+    /**
+     * Desativar um administrador no sistema.
+     *
+     * Este método desativa um administrador e seu login, impedindo o acesso ao sistema.
+     *
+     * @param id - ID do administrador a ser desativado.
+     * @throws AdministradorNaoEncontradoException - Se o administrador não for encontrado.
+     */
     @Override
     public void desativarAdministrador(Long id) {
         log.info("Desativando administrador com ID: {}", id);

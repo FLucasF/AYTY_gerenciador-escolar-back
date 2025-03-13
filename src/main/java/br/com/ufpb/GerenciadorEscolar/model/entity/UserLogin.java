@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model.entity;
 
+import br.com.ufpb.GerenciadorEscolar.util.CryptoConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -10,17 +11,18 @@ public class UserLogin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @Convert(converter = CryptoConverter.class)
     private String email;
 
-    @NotNull
+    @Convert(converter = CryptoConverter.class)
     private String senha;
 
     @NotNull
     private boolean ativo = true;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
+    @Convert(converter = CryptoConverter.class)
     private Usuario usuario;
 
     public UserLogin() {}

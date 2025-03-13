@@ -1,6 +1,5 @@
 package br.com.ufpb.GerenciadorEscolar.model.entity;
 
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -15,7 +14,7 @@ public class Aluno extends Usuario {
     private String curso;
 
     @ManyToMany(mappedBy = "alunos")
-    private List<Turma> turmas = new ArrayList<>();  // Inicializado para evitar null
+    private List<Turma> turmas = new ArrayList<>();
 
 
     public Aluno() {

@@ -1,5 +1,6 @@
 package br.com.ufpb.GerenciadorEscolar.model.entity;
 
+import br.com.ufpb.GerenciadorEscolar.util.CryptoConverter;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -15,10 +16,12 @@ public abstract class Usuario implements Serializable {
 
     private String nome;
 
+    @Convert(converter = CryptoConverter.class)
     private String email;
 
     private String senha;
 
+    @Convert(converter = CryptoConverter.class)
     private String cpf;
 
     private boolean ativo = true;

@@ -66,7 +66,7 @@ public class AlunoController {
 
     @Operation(
             summary = "Atualiza um aluno existente",
-            description = "Atualiza os dados de um aluno a partir do ID informado. Retorna erro 404 se o aluno ou o login não for encontrado, e erro 400 se nenhum dado for alterado."
+            description = "Atualiza os dados de um aluno a partir do ID informado. Retorna erro 404 se o aluno ou o login não forem encontrados, e erro 400 se nenhum dado for alterado."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Aluno atualizado com sucesso",

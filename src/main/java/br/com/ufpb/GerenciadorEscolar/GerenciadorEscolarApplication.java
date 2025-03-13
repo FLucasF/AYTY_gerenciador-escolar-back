@@ -20,7 +20,7 @@ public class GerenciadorEscolarApplication {
 			try {
 				// Tente cadastrar o administrador. Se já existir, ele vai lançar uma exceção.
 				administradorService.cadastrarAdministrador(new AdministradorRequest(
-						"Administrador",  // Nome
+						"Administrador muito gente boa legal grande pra caramba em da silva",  // Nome
 						"admin@dominio.com",  // Email
 						"admin123",  // Senha
 						"00000000000",  // CPF

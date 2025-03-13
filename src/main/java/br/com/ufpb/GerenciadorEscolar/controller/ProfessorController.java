@@ -5,6 +5,7 @@ import br.com.ufpb.GerenciadorEscolar.model.dto.professor.ProfessorResponse;
 import br.com.ufpb.GerenciadorEscolar.model.dto.ApiError;
 import br.com.ufpb.GerenciadorEscolar.service.ProfessorServiceInterface;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;

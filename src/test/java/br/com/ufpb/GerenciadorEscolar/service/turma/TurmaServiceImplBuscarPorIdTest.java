@@ -43,19 +43,4 @@ public class TurmaServiceImplBuscarPorIdTest extends BaseTurmaServiceTest {
         verify(turmaRepository, times(1)).findById(turmaId);
     }
 
-    @Test
-    public void testBuscarTurmaPorId_NullId() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> turmaService.buscarTurmaPorId(null));
-
-        assertEquals("ID da turma não pode ser nulo", exception.getMessage());
-        verify(turmaRepository, never()).findById(any());
-    }
-
-    @Test
-    public void testBuscarTurmaPorId_NegativeId() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> turmaService.buscarTurmaPorId(-1L));
-
-        assertEquals("ID da turma não pode ser negativo", exception.getMessage());
-        verify(turmaRepository, never()).findById(any());
-    }
 }

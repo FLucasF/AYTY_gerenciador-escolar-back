@@ -40,11 +40,11 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
     private final MaterialMapper materialMapper;
     private final WebClient webClient;
 
-    @Value("${minio.base.url}")
-    private String minioBaseUrl;
-
-    @Value("${minio.api.key}")
-    private String minioApiKey;
+//    @Value("${minio.base.url}")
+//    private String minioBaseUrl;
+//
+//    @Value("${minio.api.key}")
+//    private String minioApiKey;
 
 
     @Autowired
@@ -60,11 +60,18 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         this.webClient = webClient;
     }
 
+    /**
+     * Salvar um novo material no sistema e armazená-lo no MinIO.
+     *
+     * @param materialRequest - Objeto contendo os dados do material.
+     * @param file - Arquivo do material em formato de bytes.
+     * @return MaterialResponse - Retorna os dados do material salvo.
+     * @throws RuntimeException - Se a turma ou o professor não forem encontrados ou se ocorrer um erro no MinIO.
+     */
     @Override
     public MaterialResponse salvarMaterial(MaterialRequest materialRequest, byte[] file) {
         log.info("Iniciando upload do material para MinIO e salvamento no banco.");
 
-        // Validação das entidades
         Turma turma = turmaRepository.findByIdAndAtivoTrue(materialRequest.turmaId())
                 .orElseThrow(() -> new RuntimeException("Turma não encontrada"));
         log.debug("Turma encontrada: ID {}", turma.getId());
@@ -73,7 +80,7 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
                 .orElseThrow(() -> new RuntimeException("Professor não encontrado"));
         log.debug("Professor encontrado: ID {}", professor.getId());
 
-        // Monta o corpo da requisição multipart
+        //monta o crpo da requisicao multipart
         MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
         ByteArrayResource fileResource = new ByteArrayResource(file) {
             @Override
@@ -83,14 +90,14 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         };
         multipartBody.add("file", fileResource);
         multipartBody.add("uploadedBy", professor.getId().toString());
-        multipartBody.add("serviceName", Material.SERVICE_NAME); // Ex.: "gerenciadorEscolar"
+        multipartBody.add("serviceName", Material.SERVICE_NAME);
         multipartBody.add("entityId", turma.getId().toString());
         log.info("Multipart montado com file: {} e entityId: {}", materialRequest.nomeArquivo(), turma.getId());
 
-        // Envia a requisição para o MinIO usando URI relativa (a base já está configurada)
+        // Envia a requisição para o MinIO
         log.info("Enviando requisição POST para MinIO");
         MinioResponse minioResponse = webClient.post()
-                .uri("") // URI relativa, usa a baseUrl do WebClientConfig
+                .uri("")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .accept(MediaType.ALL)
                 .body(BodyInserters.fromMultipartData(multipartBody))
@@ -128,6 +135,14 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         return response;
     }
 
+    /**
+     * Listar materiais por entidade (Turma e serviço).
+     *
+     * @param serviceName - Nome do serviço associado ao material.
+     * @param turmaId - ID da turma a que os materiais pertencem.
+     * @param pageable - Objeto `Pageable` contendo as informações de paginação.
+     * @return Page<MaterialResponse> - Retorna uma página contendo os materiais encontrados.
+     */
     @Override
     public Page<MaterialResponse> listarMateriaisPorEntidade(String serviceName, Long turmaId, Pageable pageable) {
         log.info("Listando materiais para Turma ID '{}' e serviço '{}' com paginação '{}'", turmaId, serviceName, pageable);
@@ -175,6 +190,13 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         return new PageImpl<>(materialResponses, pageable, materiaisPage.getTotalElements());
     }
 
+    /**
+     * Buscar um material pelo ID.
+     *
+     * @param id - ID do material a ser buscado.
+     * @return MaterialResponse - Retorna os dados do material encontrado.
+     * @throws RuntimeException - Se o material não for encontrado ou houver erro no MinIO.
+     */
     @Override
     public MaterialResponse buscarMaterialPorId(Long id) {
         log.info("Buscando material com ID: {}", id);
@@ -208,8 +230,15 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         );
     }
 
-
-
+    /**
+     * Atualizar um material no MinIO e no banco de dados.
+     *
+     * @param id - ID do material a ser atualizado.
+     * @param materialRequest - Objeto contendo os novos dados do material.
+     * @param file - Novo arquivo do material.
+     * @return MaterialResponse - Retorna os dados do material atualizado.
+     * @throws RuntimeException - Se o material não for encontrado ou houver erro no MinIO.
+     */
     @Override
     public MaterialResponse atualizarMaterial(Long id, MaterialRequest materialRequest, byte[] file) {
         log.info("Atualizando material com ID: {}", id);
@@ -239,6 +268,12 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         return materialMapper.toResponse(material);
     }
 
+    /**
+     * Deletar um material do sistema e do MinIO.
+     *
+     * @param id - ID do material a ser deletado.
+     * @throws RuntimeException - Se o material não for encontrado ou houver erro ao removê-lo.
+     */
     @Override
     public void deletarMaterial(Long id) {
         log.info("Deletando material com ID: {}", id);
@@ -275,7 +310,13 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         log.info("Material desativado no sistema. ID: {}", id);
     }
 
-
+    /**
+     * Associar um material a uma postagem no mural.
+     *
+     * @param materialId - ID do material a ser associado.
+     * @param mural - Mural ao qual o material será associado.
+     * @throws RuntimeException - Se o material não for encontrado.
+     */
     @Override
     public void associarMaterialAoMural(Long materialId, Mural mural) {
         log.info("Associando material ID {} ao mural ID {}", materialId, mural.getId());
@@ -285,6 +326,4 @@ public class MaterialServiceImpl implements MaterialServiceInterface {
         materialRepository.save(material);
         log.info("Material ID {} associado ao mural ID {}", materialId, mural.getId());
     }
-
-
 }

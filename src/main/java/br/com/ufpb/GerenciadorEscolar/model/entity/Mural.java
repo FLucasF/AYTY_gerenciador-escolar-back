@@ -14,10 +14,8 @@ public class Mural {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "O título não pode estar vazio")
     private String titulo;
 
-    @NotBlank(message = "O conteúdo não pode estar vazio")
     @Column(columnDefinition = "TEXT")
     private String conteudo;
 
@@ -33,11 +31,10 @@ public class Mural {
     private Professor professor;
 
     @OneToMany(mappedBy = "mural", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Material> materiais; // Materiais anexados ao mural (opcional)
+    private List<Material> materiais;
 
     private boolean ativo = true;
 
-    // Campo para armazenar o ID do material que contém a imagem
     private Long imagemId;
 
     @PrePersist
@@ -45,7 +42,6 @@ public class Mural {
         this.dataCriacao = LocalDateTime.now();
     }
 
-    // Getters e Setters (incluindo para imagemId)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

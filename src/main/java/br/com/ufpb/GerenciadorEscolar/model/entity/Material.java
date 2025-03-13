@@ -10,28 +10,27 @@ public class Material {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String arquivoId; // Guarda apenas o ID do arquivo no MinIO
+    private String arquivoId;
 
     @Enumerated(EnumType.STRING)
-    private TipoArquivo tipoArquivo; // Define se é IMAGEM, VIDEO ou AUDIO
+    private TipoArquivo tipoArquivo;
 
     @ManyToOne
     @JoinColumn(name = "turma_id", nullable = false)
-    private Turma turma; // Material pertence a uma turma
+    private Turma turma;
 
     @ManyToOne
     @JoinColumn(name = "professor_id", nullable = false)
-    private Professor professor; // Quem enviou o material
+    private Professor professor;
 
     @ManyToOne
     @JoinColumn(name = "mural_id")
-    private Mural mural; // Opcional: se este material está vinculado a um mural
+    private Mural mural;
 
-    private boolean ativo = true; // Para controle de visibilidade
+    private boolean ativo = true;
 
-    public static final String SERVICE_NAME = "gerenciadorEscolar"; // Nome fixo do serviço
+    public static final String SERVICE_NAME = "gerenciadorEscolar";
 
-    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

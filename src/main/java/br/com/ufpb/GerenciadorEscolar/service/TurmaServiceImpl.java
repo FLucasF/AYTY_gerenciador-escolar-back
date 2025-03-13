@@ -42,6 +42,14 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         this.alunoMapper = alunoMapper;
     }
 
+    /**
+     * Criar uma nova turma.
+     *
+     * Este método cria uma nova turma e, opcionalmente, associa um professor a ela.
+     *
+     * @param turmaRequest - Objeto contendo os dados da nova turma.
+     * @return TurmaResponse - Retorna a turma criada no formato de resposta.
+     */
     @Override
     public TurmaResponse criarTurma(TurmaRequest turmaRequest) {
         log.info("Recebendo requisição para criar turma: {}", turmaRequest);
@@ -83,6 +91,15 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return response;
     }
 
+    /**
+     * Atualizar as informações de uma turma existente.
+     *
+     * Este método permite a atualização dos dados de uma turma, incluindo o professor responsável.
+     *
+     * @param id - ID da turma a ser atualizada.
+     * @param turmaRequest - Objeto contendo os novos dados da turma.
+     * @return TurmaResponse - Retorna os dados da turma atualizada.
+     */
     @Override
     public TurmaResponse atualizarTurma(Long id, TurmaRequest turmaRequest) {
         log.info("Atualizando turma com ID: {}", id);
@@ -126,6 +143,14 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return response;
     }
 
+    /**
+     * Buscar uma turma pelo seu ID.
+     *
+     * Este método recupera uma turma com base no ID informado.
+     *
+     * @param id - ID da turma a ser buscada.
+     * @return Optional<TurmaResponse> - Retorna um `Optional` contendo a turma encontrada, se existir.
+     */
     @Override
     public Optional<TurmaResponse> buscarTurmaPorId(Long id) {
         log.info("Buscando turma por ID: {}", id);
@@ -139,6 +164,14 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return Optional.of(turmaMapper.toResponse(turma.get()));
     }
 
+    /**
+     * Deletar uma turma pelo seu ID.
+     *
+     * Este método remove uma turma do banco de dados, caso ela não possua alunos matriculados.
+     *
+     * @param id - ID da turma a ser deletada.
+     * @throws RuntimeException - Caso existam alunos matriculados, a turma não pode ser deletada.
+     */
     @Override
     public void deletarTurma(Long id) {
         log.info("Deletando turma com ID: {}", id);
@@ -159,6 +192,19 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
     }
 
 
+    /**
+     * Matricular um aluno em uma turma.
+     *
+     * Este método busca a turma e o aluno pelos respectivos IDs e realiza a matrícula,
+     * garantindo que a turma não esteja lotada e que o aluno ainda não esteja matriculado.
+     *
+     * @param turmaId - ID da turma onde o aluno será matriculado.
+     * @param alunoId - ID do aluno que será matriculado na turma.
+     * @return TurmaResponse - Retorna a turma atualizada com o aluno matriculado.
+     * @throws TurmaNaoEncontradaException - Se a turma não for encontrada.
+     * @throws AlunoNaoEncontradoException - Se o aluno não for encontrado.
+     * @throws TurmaLotadaException - Se a turma já atingiu o limite máximo de alunos.
+     */
     @Override
     public TurmaResponse matricularAluno(Long turmaId, Long alunoId) {
         log.info("Matriculando aluno com ID: {} na turma com ID: {}", alunoId, turmaId);
@@ -193,6 +239,17 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return turmaMapper.toResponse(turma);
     }
 
+    /**
+     * Listar alunos de uma turma com paginação.
+     *
+     * Este método busca a lista de alunos matriculados em uma turma específica
+     * e retorna os resultados paginados.
+     *
+     * @param turmaId - ID da turma cujos alunos serão listados.
+     * @param pageable - Objeto `Pageable` contendo informações de paginação.
+     * @return Page<AlunoResponse> - Retorna uma página contendo os alunos da turma.
+     * @throws TurmaNaoEncontradaException - Se a turma não for encontrada.
+     */
     @Override
     public Page<AlunoResponse> listarAlunosPorTurma(Long turmaId, Pageable pageable) {
         log.info("Listando alunos da turma com ID: {} com paginação: {}", turmaId, pageable);
@@ -205,6 +262,18 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
                 .map(alunoMapper::toResponse);
     }
 
+    /**
+     * Remover um aluno de uma turma.
+     *
+     * Este método busca a turma e o aluno pelos respectivos IDs e realiza a remoção do aluno,
+     * garantindo que ele esteja matriculado antes de removê-lo.
+     *
+     * @param turmaId - ID da turma da qual o aluno será removido.
+     * @param alunoId - ID do aluno que será removido da turma.
+     * @throws TurmaNaoEncontradaException - Se a turma não for encontrada.
+     * @throws AlunoNaoEncontradoException - Se o aluno não for encontrado.
+     * @throws AlunoNaoMatriculadoException - Se o aluno não estiver matriculado na turma.
+     */
     @Override
     public void removerAlunoDaTurma(Long turmaId, Long alunoId) {
         log.info("Removendo aluno com ID: {} da turma com ID: {}", alunoId, turmaId);
@@ -229,6 +298,16 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         log.info("Aluno ID {} removido com sucesso da turma ID {}", alunoId, turmaId);
     }
 
+    /**
+     * Listar turmas em que um aluno está matriculado.
+     *
+     * Este método busca e retorna todas as turmas em que um aluno específico está matriculado,
+     * garantindo que apenas turmas ativas sejam listadas.
+     *
+     * @param alunoId - ID do aluno cujas turmas serão listadas.
+     * @param pageable - Objeto `Pageable` contendo informações de paginação.
+     * @return Page<TurmaResponse> - Retorna uma página contendo as turmas do aluno.
+     */
     @Override
     public Page<TurmaResponse> listarTurmasPorAluno(Long alunoId, Pageable pageable) {
         log.info("Listando turmas para aluno ID: {} com paginação: {}", alunoId, pageable);
@@ -237,6 +316,15 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return turmas.map(turmaMapper::toResponse);
     }
 
+    /**
+     * Listar turmas associadas a um professor.
+     *
+     * Este método busca todas as turmas ativas vinculadas a um professor específico.
+     *
+     * @param professorId - ID do professor cujas turmas serão listadas.
+     * @param pageable - Objeto `Pageable` contendo informações de paginação.
+     * @return Page<TurmaResponse> - Retorna uma página contendo as turmas do professor.
+     */
     @Override
     public Page<TurmaResponse> listarTurmasPorProfessor(Long professorId, Pageable pageable) {
         log.info("Listando turmas para professor ID: {} com paginação: {}", professorId, pageable);
@@ -245,6 +333,14 @@ public class TurmaServiceImpl implements TurmaServiceInterface {
         return turmas.map(turmaMapper::toResponse);
     }
 
+    /**
+     * Listar todas as turmas cadastradas no sistema.
+     *
+     * Este método retorna uma lista paginada contendo todas as turmas, independentemente de estarem ativas ou inativas.
+     *
+     * @param pageable - Objeto `Pageable` contendo informações de paginação.
+     * @return Page<TurmaResponse> - Retorna uma página contendo todas as turmas do sistema.
+     */
     @Override
     public Page<TurmaResponse> listarTodasTurmas(Pageable pageable) {
         log.info("Listando todas as turmas com paginação: {}", pageable);

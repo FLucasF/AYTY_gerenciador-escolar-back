@@ -1,15 +1,12 @@
 //package br.com.ufpb.GerenciadorEscolar.service.administrador;
 //
-//import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorRequest;
-//import br.com.ufpb.GerenciadorEscolar.dto.administrador.AdministradorResponse;
+//
+//import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorRequest;
+//import br.com.ufpb.GerenciadorEscolar.model.dto.administrador.AdministradorResponse;
 //import br.com.ufpb.GerenciadorEscolar.model.entity.Administrador;
 //import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
-//import br.com.ufpb.GerenciadorEscolar.service.NenhumaAlteracaoRealizadaException;
-//import br.com.ufpb.GerenciadorEscolar.service.AdministradorNaoEncontradoException;
-//import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
-//import br.com.ufpb.GerenciadorEscolar.service.SiapeJaCadastradoException;
+//import br.com.ufpb.GerenciadorEscolar.service.*;
 //import org.junit.jupiter.api.Test;
-//import org.mockito.ArgumentCaptor;
 //
 //import java.util.Optional;
 //
@@ -109,7 +106,7 @@
 //        when(administradorRepository.findByIdAndAtivoTrue(admin.getId())).thenReturn(Optional.of(admin));
 //        when(userLoginRepository.findByUsuarioAndAtivoTrue(admin)).thenReturn(Optional.empty());
 //
-//        assertThrows(RuntimeException.class,
+//        assertThrows(LoginNaoEncontradoException.class,
 //                () -> administradorService.atualizarAdministrador(admin.getId(), criarAdministradorRequestPadrao()));
 //    }
 //

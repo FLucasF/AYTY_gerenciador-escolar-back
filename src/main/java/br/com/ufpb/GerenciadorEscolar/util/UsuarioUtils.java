@@ -1,7 +1,8 @@
 package br.com.ufpb.GerenciadorEscolar.util;
 
-import br.com.ufpb.GerenciadorEscolar.model.entity.Usuario;
+
 import br.com.ufpb.GerenciadorEscolar.model.entity.UserLogin;
+import br.com.ufpb.GerenciadorEscolar.model.entity.Usuario;
 import br.com.ufpb.GerenciadorEscolar.repository.UsuarioRepository;
 import br.com.ufpb.GerenciadorEscolar.service.CpfJaCadastradoException;
 import br.com.ufpb.GerenciadorEscolar.service.EmailJaCadastradoException;
@@ -49,13 +50,19 @@ public class UsuarioUtils {
                                          PasswordEncoder passwordEncoder) {
         boolean alterado = false;
 
+        // ✅ Atualiza Nome se for diferente
         if (novoNome != null && !novoNome.equals(usuario.getNome())) {
             usuario.setNome(novoNome);
             alterado = true;
         }
 
+        // ✅ Atualiza Email se for diferente e NÃO estiver cadastrado
         if (novoEmail != null && !novoEmail.equals(usuario.getEmail())) {
-            if (usuarioRepository.findByEmailAndAtivoTrue(novoEmail).isPresent()) {
+            boolean emailExiste = usuarioRepository.findByEmailAndAtivoTrue(novoEmail)
+                    .filter(u -> !u.getId().equals(usuario.getId())) // Garante que não está verificando o próprio email
+                    .isPresent();
+
+            if (emailExiste) {
                 throw new EmailJaCadastradoException("Já existe outro usuário ativo com este e-mail.");
             }
             usuario.setEmail(novoEmail);
@@ -63,23 +70,37 @@ public class UsuarioUtils {
             alterado = true;
         }
 
-        if (novoCpf != null && !novoCpf.equals(usuario.getCpf()) && isCpfValido(novoCpf)) {
-            if (usuarioRepository.findByCpfAndAtivoTrue(novoCpf).isPresent()) {
+        // ✅ Atualiza CPF se for diferente e válido
+        if (novoCpf != null && !novoCpf.equals(usuario.getCpf())) {
+            if (!isCpfValido(novoCpf)) {
+                throw new IllegalArgumentException("CPF inválido! Deve conter 11 dígitos numéricos.");
+            }
+            boolean cpfExiste = usuarioRepository.findByCpfAndAtivoTrue(novoCpf)
+                    .filter(u -> !u.getId().equals(usuario.getId()))
+                    .isPresent();
+            if (cpfExiste) {
                 throw new CpfJaCadastradoException("Já existe outro usuário ativo com este CPF.");
             }
             usuario.setCpf(novoCpf);
             alterado = true;
         }
 
-        if (novaSenha != null && !novaSenha.trim().isEmpty() && !passwordEncoder.matches(novaSenha, usuario.getSenha())) {
-            if (!isSenhaValida(novaSenha)) {
-                throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+        // ✅ Atualiza Senha se for diferente da atual
+        if (novaSenha != null && !novaSenha.trim().isEmpty()) {
+            boolean senhaIgual = passwordEncoder.matches(novaSenha, usuario.getSenha());
+
+            if (!senhaIgual) {  // Apenas altera se for diferente
+                if (!isSenhaValida(novaSenha)) {
+                    throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+                }
+                String senhaCriptografada = passwordEncoder.encode(novaSenha);
+                usuario.setSenha(senhaCriptografada);
+                userLogin.setSenha(senhaCriptografada);
+                alterado = true;
             }
-            usuario.setSenha(passwordEncoder.encode(novaSenha));
-            userLogin.setSenha(passwordEncoder.encode(novaSenha));
-            alterado = true;
         }
 
         return alterado;
     }
+
 }

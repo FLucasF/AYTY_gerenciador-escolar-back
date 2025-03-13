@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED.value(),
                 "Falha na autenticação",
                 ex.getMessage(),
-                "https://example.com/probs/authentication-failed",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Postagem não encontrada",
                 ex.getMessage(),
-                "https://example.com/probs/postagem-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Login não encontrado",
                 ex.getMessage(),
-                "https://example.com/probs/login-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Material não encontrado",
                 ex.getMessage(),
-                "https://example.com/probs/material-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Administrador não encontrado",
                 ex.getMessage(),
-                "https://example.com/probs/administrator-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Aluno não encontrado",
                 ex.getMessage(),
-                "https://example.com/probs/aluno-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Turma não encontrada",
                 ex.getMessage(),
-                "https://example.com/probs/turma-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -104,7 +104,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 "Professor não encontrado",
                 ex.getMessage(),
-                "https://example.com/probs/professor-not-found",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Email já cadastrado",
                 ex.getMessage(),
-                "https://example.com/probs/email-already-registered",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -128,7 +128,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "CPF já cadastrado",
                 ex.getMessage(),
-                "https://example.com/probs/cpf-already-registered",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Nenhuma alteração realizada",
                 ex.getMessage(),
-                "https://example.com/probs/no-change",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -152,7 +152,7 @@ public class GlobalExceptionHandler {
                 ex.getHttpStatus().value(),
                 "Erro no MinIO",
                 "Falha ao processar o arquivo. Contate o suporte.",
-                "https://example.com/probs/minio-error",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(ex.getHttpStatus()).body(error);
@@ -165,7 +165,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Erro de validação",
                 errorMsg,
-                "https://example.com/probs/validation-error",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -177,7 +177,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Argumento ilegal",
                 ex.getMessage(),
-                "https://example.com/probs/illegal-argument",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -189,7 +189,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "SIAPE já cadastrado",
                 ex.getMessage(),
-                "https://example.com/probs/siape-already-registered",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -201,7 +201,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Turma lotada",
                 ex.getMessage(),
-                "https://example.com/probs/turma-lotada",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -213,7 +213,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Erro interno do servidor",
                 ex.getMessage(),
-                "https://example.com/probs/internal-server-error",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -225,7 +225,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Erro inesperado",
                 ex.getMessage(),
-                "https://example.com/probs/unexpected-error",
+                "FAZER UM SITE STATIC EXPLICANDO CADA ERRO",
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);

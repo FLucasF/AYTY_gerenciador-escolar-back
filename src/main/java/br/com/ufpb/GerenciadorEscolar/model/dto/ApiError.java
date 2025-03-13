@@ -25,7 +25,7 @@ public record ApiError(
 
         @Schema(
                 description = "URL que aponta para uma página com informações detalhadas sobre esse tipo de erro.",
-                example = "https://api.gerenciadordeturmas.com/probs/recurso-not-found"
+                example = "CRIAR SITE STATICO"
         )
         String type,
 

@@ -35,6 +35,18 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
         this.usuarioUtils = usuarioUtils;
     }
 
+    /**
+     * Cadastrar um novo professor.
+     *
+     * Este método verifica se o professor já existe no banco de dados, valida suas credenciais
+     * e realiza o cadastro do professor e seu login no sistema.
+     *
+     * @param professorRequest - Objeto contendo os dados do professor a ser cadastrado.
+     * @return ProfessorResponse - Retorna os dados do professor cadastrado no formato de resposta.
+     * @throws EmailJaCadastradoException - Se já existir um professor com o mesmo e-mail.
+     * @throws CpfJaCadastradoException - Se já existir um professor com o mesmo CPF.
+     * @throws SiapeJaCadastradoException - Se já existir um professor com o mesmo SIAPE.
+     */
     @Override
     public ProfessorResponse cadastrarProfessor(ProfessorRequest professorRequest) {
         log.info("Verificando se já existe professor ativo com o e-mail {} ou CPF {}", professorRequest.email(), professorRequest.cpf());
@@ -67,6 +79,14 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
         return professorMapper.toResponse(professor);
     }
 
+    /**
+     * Listar professores ativos com paginação.
+     *
+     * Este método retorna uma lista paginada de professores que estão ativos no sistema.
+     *
+     * @param pageable - Objeto `Pageable` contendo as informações de paginação.
+     * @return Page<ProfessorResponse> - Retorna uma página contendo os professores ativos.
+     */
     @Override
     public Page<ProfessorResponse> listarProfessoresAtivos(Pageable pageable) {
         log.info("Listando professores ativos com paginação: {}", pageable);
@@ -74,6 +94,15 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
                 .map(professorMapper::toResponse);
     }
 
+    /**
+     * Buscar um professor pelo ID.
+     *
+     * Este método recupera um professor ativo no sistema a partir do seu ID.
+     *
+     * @param id - ID do professor a ser buscado.
+     * @return ProfessorResponse - Retorna os dados do professor no formato de resposta.
+     * @throws ProfessorNaoEncontradoException - Se o professor não for encontrado.
+     */
     @Override
     public ProfessorResponse buscarProfessorPorId(Long id) {
         log.info("Buscando professor por ID: {}", id);
@@ -87,6 +116,19 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
         return professorMapper.toResponse(professor);
     }
 
+    /**
+     * Atualizar as informações de um professor.
+     *
+     * Este método permite atualizar os dados de um professor ativo no sistema, garantindo a
+     * consistência dos dados e verificando a duplicidade de informações sensíveis como e-mail, CPF e SIAPE.
+     *
+     * @param id - ID do professor que será atualizado.
+     * @param professorRequest - Objeto contendo os novos dados do professor.
+     * @return ProfessorResponse - Retorna os dados do professor atualizado no formato de resposta.
+     * @throws ProfessorNaoEncontradoException - Se o professor não for encontrado ou estiver inativo.
+     * @throws SiapeJaCadastradoException - Se o SIAPE já estiver cadastrado para outro professor ativo.
+     * @throws NenhumaAlteracaoRealizadaException - Se nenhuma alteração foi feita nos dados do professor.
+     */
     @Override
     public ProfessorResponse atualizarProfessor(Long id, ProfessorRequest professorRequest) {
         log.info("Atualizando professor com ID: {}", id);
@@ -132,6 +174,14 @@ public class ProfessorServiceImpl implements ProfessorServiceInterface {
     }
 
 
+    /**
+     * Desativar um professor no sistema.
+     *
+     * Este método desativa um professor e seu login, impedindo o acesso ao sistema.
+     *
+     * @param id - ID do professor a ser desativado.
+     * @throws ProfessorNaoEncontradoException - Se o professor não for encontrado.
+     */
     @Override
     public void desativarProfessor(Long id) {
         log.info("Desativando professor com ID: {}", id);

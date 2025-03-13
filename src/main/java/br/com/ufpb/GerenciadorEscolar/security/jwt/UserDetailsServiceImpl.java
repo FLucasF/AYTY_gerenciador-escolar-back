@@ -23,6 +23,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.userLoginRepository = userLoginRepository;
     }
 
+    /**
+     * Carregar um usuário pelo e-mail para autenticação.
+     *
+     * Este método busca um usuário no banco de dados pelo e-mail informado, garantindo que
+     * ele esteja ativo. Caso o usuário seja encontrado, retorna um objeto `UserDetails`
+     * contendo as informações necessárias para autenticação.
+     *
+     * @param email - E-mail do usuário que deseja se autenticar.
+     * @return UserDetails - Retorna os detalhes do usuário, incluindo e-mail, senha e permissões.
+     * @throws UsernameNotFoundException - Se o usuário não for encontrado ou estiver inativo.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         logger.info("Buscando usuário pelo email: {}", email);
